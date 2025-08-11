@@ -490,7 +490,20 @@ class EbayStockChecker {
 
   updateDisplayText(text) {
     if (this.targetElement) {
-      this.targetElement.innerHTML = `<span style="color: #2d5aa0; font-weight: bold;">${text}</span>`;
+      try {
+        this.targetElement.innerHTML = `<span style="color: #2d5aa0; font-weight: bold; background: #e3f2fd; padding: 2px 6px; border-radius: 4px;">${text}</span>`;
+        this.debugLog(`📝 Texto actualizado: "${text}"`);
+      } catch (error) {
+        this.debugLog(`❌ Error actualizando texto: ${error.message}`);
+        // Fallback: intentar con textContent
+        try {
+          this.targetElement.textContent = text;
+        } catch (fallbackError) {
+          this.debugLog(`❌ Error con fallback: ${fallbackError.message}`);
+        }
+      }
+    } else {
+      this.debugLog(`⚠️ No hay elemento objetivo para actualizar texto: "${text}"`);
     }
   }
 
