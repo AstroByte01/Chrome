@@ -444,23 +444,41 @@ class EbayStockChecker {
   }
 
   checkForError() {
-    const errorMessages = document.querySelectorAll('.ux-textspans, .error, .ebay-notice-content, .textbox__error-msg, #qtyErrMsg');
+    const errorSelectors = [
+      '.ux-textspans', 
+      '.error', 
+      '.ebay-notice-content', 
+      '.textbox__error-msg', 
+      '#qtyErrMsg',
+      '[class*="error"]',
+      '[class*="notice"]',
+      '[id*="error"]'
+    ];
     
-    for (let errorEl of errorMessages) {
-      const errorText = errorEl.textContent.toLowerCase();
-      if (errorText.includes('please enter a quantity of 1 or more') ||
-          errorText.includes('ingresa una cantidad de 1 o más') ||
-          errorText.includes('quantity must be') ||
-          errorText.includes('la cantidad debe ser') ||
-          errorText.includes('exceeded') ||
-          errorText.includes('superado') ||
-          errorText.includes('maximum quantity') ||
-          errorText.includes('cantidad máxima') ||
-          errorText.includes('available quantity') ||
-          errorText.includes('cantidad disponible') ||
-          errorText.includes('inventory limit') ||
-          errorText.includes('límite de inventario')) {
-        return true;
+    for (let selector of errorSelectors) {
+      try {
+        const errorMessages = document.querySelectorAll(selector);
+        for (let errorEl of errorMessages) {
+          const errorText = errorEl.textContent.toLowerCase();
+          if (errorText.includes('please enter a quantity of 1 or more') ||
+              errorText.includes('ingresa una cantidad de 1 o más') ||
+              errorText.includes('quantity must be') ||
+              errorText.includes('la cantidad debe ser') ||
+              errorText.includes('exceeded') ||
+              errorText.includes('superado') ||
+              errorText.includes('maximum quantity') ||
+              errorText.includes('cantidad máxima') ||
+              errorText.includes('available quantity') ||
+              errorText.includes('cantidad disponible') ||
+              errorText.includes('inventory limit') ||
+              errorText.includes('límite de inventario')) {
+            
+            this.debugLog(`⚠️ Error detectado: "${errorText.substring(0, 50)}..."`);
+            return true;
+          }
+        }
+      } catch (error) {
+        this.debugLog(`❌ Error con selector "${selector}": ${error.message}`);
       }
     }
     return false;
