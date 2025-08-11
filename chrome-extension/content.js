@@ -64,10 +64,12 @@ class EbayStockChecker {
   }
 
   findRequiredElements() {
-    // Buscar campo de cantidad
-    this.quantityInput = document.querySelector('input[data-testid="qty-input"]') ||
+    // Buscar campo de cantidad - usar el selector específico primero
+    this.quantityInput = document.querySelector('#qtyTextBox') ||
+                        document.querySelector('input[name="quantity"]') ||
+                        document.querySelector('input[data-testid="qty-input"]') ||
                         document.querySelector('input[id*="quantity"]') ||
-                        document.querySelector('input[name*="quantity"]') ||
+                        document.querySelector('.textbox__control[name="quantity"]') ||
                         document.querySelector('.quantity input') ||
                         document.querySelector('#qtySubTxt');
 
@@ -75,7 +77,14 @@ class EbayStockChecker {
     this.addToCartBtn = document.querySelector('[data-testid="cta-top"]') ||
                        document.querySelector('#atcBtn') ||
                        document.querySelector('.notranslate') ||
-                       document.querySelector('a[href*="addToCart"]');
+                       document.querySelector('a[href*="addToCart"]') ||
+                       document.querySelector('[data-testid="atc-cta-button"]');
+    
+    console.log('Elementos encontrados:', {
+      quantityInput: this.quantityInput ? 'Encontrado' : 'No encontrado',
+      quantityInputId: this.quantityInput?.id || 'Sin ID',
+      addToCartBtn: this.addToCartBtn ? 'Encontrado' : 'No encontrado'
+    });
   }
 
   async startStockCheck() {
