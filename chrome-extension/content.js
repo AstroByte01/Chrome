@@ -445,96 +445,60 @@ class EbayStockChecker {
   }
 
   checkForError() {
-    // Primero buscar mensajes de error específicos de eBay
-    const specificErrorMessages = [
+    // Mensajes de error específicos que indican stock insuficiente
+    const errorMessages = [
       'Please enter a lower number',
-      'please enter a lower number', 
+      'please enter a lower number',
       'Please enter a quantity of 1 or more',
       'please enter a quantity of 1 or more',
-      'Quantity must be',
-      'quantity must be',
+      'not available',
+      'no available',
+      'insufficient',
       'exceeded',
-      'superado',
-      'maximum quantity',
-      'cantidad máxima',
-      'available quantity',
-      'cantidad disponible',
-      'inventory limit',
-      'límite de inventario',
-      'enter a lower',
-      'ingresa un número menor',
-      'ingresa una cantidad',
-      'la cantidad debe ser'
+      'too many',
+      'demasiado',
+      'insuficiente',
+      'no disponible'
     ];
 
-    // Buscar en todo el texto de la página primero
+    this.debugLog('🔍 Buscando mensajes de error...');
+
+    // 1. Buscar en todo el texto de la página (más directo)
     const pageText = document.body.innerText || document.body.textContent || '';
     const lowerPageText = pageText.toLowerCase();
     
-    for (let errorMsg of specificErrorMessages) {
-      if (lowerPageText.includes(errorMsg.toLowerCase())) {
-        this.debugLog(`🚨 Error detectado en página: "${errorMsg}"`);
+    for (let errorMsg of errorMessages) {
+      if (lowerPageText.includes(errorMsg)) {
+        this.debugLog(`🚨 ERROR ENCONTRADO en página: "${errorMsg}"`);
         return true;
       }
     }
 
-    // Buscar en elementos específicos con selectores más amplios
-    const errorSelectors = [
-      '.ux-textspans', 
-      '.error', 
-      '.ebay-notice-content', 
-      '.textbox__error-msg', 
-      '#qtyErrMsg',
-      '[class*="error"]',
-      '[class*="notice"]',
-      '[class*="alert"]',
-      '[id*="error"]',
-      '[style*="color: red"]',
-      '[style*="color:red"]',
-      '*[class*="text-"]', // Clases que contengan text-
-      'span[class*="ux-"]'   // Elementos span con clases ux-
-    ];
-    
-    for (let selector of errorSelectors) {
-      try {
-        const errorMessages = document.querySelectorAll(selector);
-        for (let errorEl of errorMessages) {
-          const errorText = (errorEl.textContent || errorEl.innerText || '').toLowerCase();
-          
-          // Buscar cualquier mensaje de error
-          for (let errorMsg of specificErrorMessages) {
-            if (errorText.includes(errorMsg.toLowerCase())) {
-              this.debugLog(`🚨 Error detectado con selector "${selector}": "${errorText.substring(0, 50)}..."`);
+    // 2. Buscar elementos específicos con colores rojos o clases de error
+    const allElements = document.querySelectorAll('*');
+    for (let element of allElements) {
+      const text = (element.textContent || '').toLowerCase();
+      const style = window.getComputedStyle(element);
+      
+      // Si el elemento contiene un mensaje de error y es visible
+      if (text.length > 5 && text.length < 100) { // Filtrar textos muy cortos o muy largos
+        for (let errorMsg of errorMessages) {
+          if (text.includes(errorMsg)) {
+            // Verificar si es visible y tiene estilo de error
+            if (style.color.includes('rgb(255') || 
+                style.color.includes('red') || 
+                element.className.includes('error') ||
+                element.className.includes('notice')) {
+              
+              this.debugLog(`🚨 ERROR ENCONTRADO en elemento: "${text.substring(0, 50)}"`);
               return true;
             }
           }
         }
-      } catch (error) {
-        this.debugLog(`❌ Error con selector "${selector}": ${error.message}`);
       }
     }
 
-    // Búsqueda adicional en elementos que pueden contener errores
-    try {
-      const allElements = document.querySelectorAll('*');
-      for (let element of allElements) {
-        const text = (element.textContent || element.innerText || '').toLowerCase();
-        const style = window.getComputedStyle(element);
-        
-        // Si el elemento tiene texto rojo y contiene un mensaje de error
-        if (style.color.includes('rgb(255') || style.color.includes('red')) {
-          for (let errorMsg of specificErrorMessages) {
-            if (text.includes(errorMsg.toLowerCase()) && text.length < 100) { // Evitar textos muy largos
-              this.debugLog(`🚨 Error detectado por color rojo: "${text.substring(0, 50)}..."`);
-              return true;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      this.debugLog(`❌ Error en búsqueda por color: ${error.message}`);
-    }
-    
+    this.debugLog('✅ No se detectaron errores');
     return false;
   }
 
