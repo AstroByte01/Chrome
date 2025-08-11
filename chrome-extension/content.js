@@ -107,26 +107,82 @@ class EbayStockChecker {
   }
 
   findRequiredElements() {
-    // Buscar campo de cantidad - usar el selector específico primero
-    this.quantityInput = document.querySelector('#qtyTextBox') ||
-                        document.querySelector('input[name="quantity"]') ||
-                        document.querySelector('input[data-testid="qty-input"]') ||
-                        document.querySelector('input[id*="quantity"]') ||
-                        document.querySelector('.textbox__control[name="quantity"]') ||
-                        document.querySelector('.quantity input') ||
-                        document.querySelector('#qtySubTxt');
+    console.log('Buscando elementos requeridos...');
+    
+    // Lista de selectores para el campo de cantidad
+    const quantitySelectors = [
+      '#qtyTextBox',
+      'input[name="quantity"]',
+      'input[data-testid="qty-input"]',
+      'input[id*="quantity"]',
+      '.textbox__control[name="quantity"]',
+      '.quantity input',
+      '#qtySubTxt',
+      'input[class*="textbox"]',
+      'input[type="text"]'
+    ];
+    
+    // Buscar campo de cantidad
+    for (let selector of quantitySelectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        this.quantityInput = element;
+        console.log(`Campo de cantidad encontrado con selector: ${selector}`, element);
+        break;
+      }
+    }
+    
+    if (!this.quantityInput) {
+      console.log('Buscando campos de texto que puedan ser cantidad...');
+      const allInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+      for (let input of allInputs) {
+        const value = input.value;
+        const name = input.name || '';
+        const id = input.id || '';
+        const className = input.className || '';
+        
+        // Si el input tiene valor "1" y está relacionado con cantidad
+        if (value === '1' && (
+          name.toLowerCase().includes('qty') ||
+          name.toLowerCase().includes('quantity') ||
+          id.toLowerCase().includes('qty') ||
+          id.toLowerCase().includes('quantity') ||
+          className.toLowerCase().includes('qty')
+        )) {
+          this.quantityInput = input;
+          console.log('Campo de cantidad encontrado por heurística:', input);
+          break;
+        }
+      }
+    }
 
-    // Buscar botón de agregar al carrito para triggear validación
-    this.addToCartBtn = document.querySelector('[data-testid="cta-top"]') ||
-                       document.querySelector('#atcBtn') ||
-                       document.querySelector('.notranslate') ||
-                       document.querySelector('a[href*="addToCart"]') ||
-                       document.querySelector('[data-testid="atc-cta-button"]');
+    // Buscar botón de agregar al carrito
+    const cartButtonSelectors = [
+      '[data-testid="cta-top"]',
+      '#atcBtn', 
+      '.notranslate',
+      'a[href*="addToCart"]',
+      '[data-testid="atc-cta-button"]',
+      'button[class*="btn-prim"]',
+      'button:contains("Buy It Now")',
+      'a:contains("Buy It Now")'
+    ];
+    
+    for (let selector of cartButtonSelectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        this.addToCartBtn = element;
+        console.log(`Botón encontrado con selector: ${selector}`, element);
+        break;
+      }
+    }
     
     console.log('Elementos encontrados:', {
-      quantityInput: this.quantityInput ? 'Encontrado' : 'No encontrado',
+      quantityInput: this.quantityInput ? 'SÍ' : 'NO',
       quantityInputId: this.quantityInput?.id || 'Sin ID',
-      addToCartBtn: this.addToCartBtn ? 'Encontrado' : 'No encontrado'
+      quantityInputName: this.quantityInput?.name || 'Sin nombre',
+      quantityInputValue: this.quantityInput?.value || 'Sin valor',
+      addToCartBtn: this.addToCartBtn ? 'SÍ' : 'NO'
     });
   }
 
