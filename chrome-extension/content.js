@@ -6,7 +6,63 @@ class EbayStockChecker {
     this.targetElement = null;
     this.quantityInput = null;
     this.addToCartBtn = null;
+    this.debugPanel = null;
     this.init();
+  }
+
+  createDebugPanel() {
+    // Crear panel de debug visible
+    this.debugPanel = document.createElement('div');
+    this.debugPanel.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 10000;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-height: 400px;
+      overflow-y: auto;
+    `;
+    
+    this.debugPanel.innerHTML = `
+      <h3 style="margin: 0 0 10px 0; color: #667eea;">🔍 eBay Stock Checker Debug</h3>
+      <div id="debug-content">Iniciando...</div>
+      <button id="force-check" style="
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 100%;
+      ">Forzar Verificación</button>
+    `;
+    
+    document.body.appendChild(this.debugPanel);
+    
+    // Agregar event listener al botón
+    const forceBtn = this.debugPanel.querySelector('#force-check');
+    forceBtn.addEventListener('click', () => {
+      this.isChecking = false;
+      this.debugLog('🔄 Verificación forzada por usuario');
+      this.findAndReplaceStock();
+    });
+  }
+
+  debugLog(message) {
+    console.log(message);
+    if (this.debugPanel) {
+      const content = this.debugPanel.querySelector('#debug-content');
+      content.innerHTML += `<div style="margin: 2px 0; color: #333;">${new Date().toLocaleTimeString()}: ${message}</div>`;
+      content.scrollTop = content.scrollHeight;
+    }
   }
 
   init() {
