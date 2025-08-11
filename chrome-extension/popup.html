@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eBay Stock Checker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="icon48.png" alt="eBay Stock Checker" class="logo">
+      <h1>eBay Stock Checker</h1>
+    </div>
+    
+    <div class="content">
+      <div class="status" id="status">
+        <span class="status-indicator" id="statusIndicator">●</span>
+        <span id="statusText">Listo para usar</span>
+      </div>
+      
+      <div class="info">
+        <h3>¿Cómo funciona?</h3>
+        <ul>
+          <li>Navega a cualquier producto de eBay</li>
+          <li>Si ves "More than 10 available", la extensión automáticamente verificará el stock real</li>
+          <li>El texto será reemplazado con la cantidad exacta disponible</li>
+        </ul>
+      </div>
+      
+      <div class="controls">
+        <button id="toggleBtn" class="btn primary">Activar Verificación</button>
+        <button id="refreshBtn" class="btn secondary">Refrescar Página</button>
+      </div>
+      
+      <div class="footer">
+        <p>Versión 1.0.0</p>
+        <p>Funciona en páginas de productos de eBay</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

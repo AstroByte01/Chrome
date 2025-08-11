@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "eBay Stock Checker",
+  "version": "1.0.0",
+  "description": "Muestra la cantidad real disponible en productos de eBay",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.ebay.com/*",
+    "https://*.ebay.es/*",
+    "https://*.ebay.co.uk/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.ebay.com/itm/*",
+        "https://*.ebay.es/itm/*",
+        "https://*.ebay.co.uk/itm/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "eBay Stock Checker"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
