@@ -3,6 +3,49 @@
 ## ✅ PROBLEMA RESUELTO
 Los iconos han sido creados automáticamente. La extensión está completa y lista para instalar.
 
+## 🚀 ALGORITMO REVOLUCIONARIO - v1.1.0
+
+### ⚡ **BÚSQUEDA EXPONENCIAL + BINARIA IMPLEMENTADA**
+
+**¿Qué cambió?**
+- ❌ **Antes**: 3400 consultas (1 en 1) = 57 minutos
+- ✅ **Ahora**: ~22 consultas = 18 segundos
+- 🎯 **Mejora**: 190x más rápido
+
+### 🧮 **Cómo Funciona Matemáticamente:**
+
+1. **PASO 1: Lectura Directa** (0 consultas)
+   - Busca stock en HTML: `data-stock`, `data-inventory`, etc.
+   - Analiza scripts JSON embebidos
+   - Si encuentra → resultado instantáneo
+
+2. **PASO 2: Búsqueda Exponencial** (~8 consultas)
+   - Prueba: 20, 40, 80, 160, 320, 640, 1280, 2560...
+   - Para cuando encuentra primer error
+   - Ejemplo: 2560 ✅, 5120 ❌ → límite entre 2560-5120
+
+3. **PASO 3: Búsqueda Binaria** (~12 consultas)
+   - Rango: 2560-5120 → prueba 3840
+   - Si 3840 ✅ → rango 3840-5120
+   - Si 3840 ❌ → rango 2560-3840
+   - Continúa hasta encontrar valor exacto
+
+### 📊 **Comparación de Rendimiento:**
+
+| Stock Real | Método Anterior | Método Nuevo | Mejora |
+|------------|----------------|--------------|--------|
+| 100        | 100 consultas  | 14 consultas | 7x     |
+| 1,000      | 1,000 consultas| 18 consultas | 55x    |
+| 3,400      | 3,400 consultas| 22 consultas | 154x   |
+| 10,000     | 10,000 consultas| 26 consultas| 384x   |
+
+### 🛡️ **Características de Seguridad:**
+- ✅ Delays de 800ms entre consultas (no satura eBay)
+- ✅ Detección de cambios de página
+- ✅ Restauración automática del valor original
+- ✅ 3 métodos de detección de errores redundantes
+- ✅ Botón de parada de emergencia
+
 ## ✅ LÓGICA CORREGIDA EN v1.0.3
 
 ### 🎯 **Algoritmo Simplificado**
