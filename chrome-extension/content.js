@@ -609,101 +609,80 @@ class EbayStockChecker {
   }
 
   checkForError() {
-    this.debugLog('🔍 Verificando errores...');
+    this.debugLog('🔍 Verificando errores con selector específico...');
 
-    // Lista de mensajes de error específicos de eBay
-    const errorMessages = [
-      'Please enter a lower number',
-      'please enter a lower number',
-      'Please enter a quantity of 1 or more',
-      'please enter a quantity of 1 or more',
-      'The quantity entered is not available',
-      'quantity entered is not available',
-      'not available',
-      'insufficient quantity',
-      'insufficient stock',
-      'exceeded maximum',
-      'exceeds available',
-      'limit exceeded',
-      'too many items',
-      'maximum quantity',
-      'enter a lower',
-      'lower number'
+    // MÉTODO PRINCIPAL: Buscar en el elemento específico donde aparece el error
+    const specificSelectors = [
+      '#qtyErrMsg > span',                    // Selector específico que me diste
+      '#qtyErrMsg span',                      // Variante sin >
+      '#qtyErrMsg',                           // El contenedor completo
+      '[id="qtyErrMsg"] > span',              // Variante con atributo
+      '[id="qtyErrMsg"] span'                 // Variante sin >
     ];
 
-    // MÉTODO 1: Búsqueda directa en el texto completo de la página
-    const pageText = (document.body.innerText || document.body.textContent || '').toLowerCase();
-    
-    for (let errorMsg of errorMessages) {
-      if (pageText.includes(errorMsg.toLowerCase())) {
-        this.debugLog(`🚨 ERROR ENCONTRADO (método 1): "${errorMsg}"`);
-        return true;
-      }
-    }
-
-    // MÉTODO 2: Buscar elementos específicos que puedan contener errores
-    const errorSelectors = [
-      // Selectores específicos de eBay
-      '[class*="error"]', '[class*="Error"]', '[class*="ERROR"]',
-      '[class*="notice"]', '[class*="Notice"]', '[class*="NOTICE"]', 
-      '[class*="alert"]', '[class*="Alert"]', '[class*="ALERT"]',
-      '[class*="warning"]', '[class*="Warning"]', '[class*="WARNING"]',
-      '[class*="message"]', '[class*="Message"]', '[class*="MESSAGE"]',
-      // Selectores de elementos rojos o con estilos de error
-      '[style*="color: red"]', '[style*="color:red"]', '[style*="color: #ff"]',
-      '[style*="color:#ff"]', '[style*="color: rgb(255"]',
-      // Selectores cerca del campo de cantidad
-      '.textbox__error-msg', '#qtyErrMsg', '[id*="error"]', '[id*="Error"]'
-    ];
-
-    for (let selector of errorSelectors) {
+    for (let selector of specificSelectors) {
       try {
         const elements = document.querySelectorAll(selector);
+        this.debugLog(`🔍 Probando selector "${selector}": ${elements.length} elementos encontrados`);
+        
         for (let element of elements) {
-          const text = (element.textContent || element.innerText || '').toLowerCase();
+          const text = element.textContent || element.innerText || '';
+          this.debugLog(`📝 Texto en elemento: "${text}"`);
           
-          // Solo considerar textos de longitud razonable para mensajes de error
-          if (text.length > 3 && text.length < 200) {
-            for (let errorMsg of errorMessages) {
-              if (text.includes(errorMsg.toLowerCase())) {
-                this.debugLog(`🚨 ERROR ENCONTRADO (método 2, selector: ${selector}): "${text.substring(0, 50)}..."`);
-                return true;
-              }
-            }
+          if (text.includes('Please enter a lower number') || 
+              text.includes('please enter a lower number')) {
+            this.debugLog(`🚨 ERROR DETECTADO en selector "${selector}": "${text}"`);
+            return true;
           }
         }
       } catch (selectorError) {
-        // Continuar con el siguiente selector si este falla
-        continue;
+        this.debugLog(`❌ Error con selector "${selector}": ${selectorError.message}`);
       }
     }
 
-    // MÉTODO 3: Buscar elementos que cambiaron recientemente y tienen colores de error
+    // MÉTODO SECUNDARIO: Buscar elementos con clase ux-textspans
     try {
-      const allElements = document.querySelectorAll('*');
-      const now = Date.now();
+      const textspansElements = document.querySelectorAll('.ux-textspans, span.ux-textspans');
+      this.debugLog(`🔍 Elementos con clase ux-textspans: ${textspansElements.length}`);
       
-      for (let element of allElements) {
-        const computedStyle = window.getComputedStyle(element);
-        const text = (element.textContent || '').toLowerCase();
+      for (let element of textspansElements) {
+        const text = element.textContent || element.innerText || '';
+        this.debugLog(`📝 Texto en ux-textspans: "${text}"`);
         
-        // Si el elemento tiene color rojo y texto relevante
-        if ((computedStyle.color.includes('rgb(255') || 
-             computedStyle.color.includes('red') ||
-             computedStyle.color.includes('#ff') ||
-             computedStyle.color.includes('#f00')) &&
-            text.length > 5 && text.length < 150) {
-          
-          for (let errorMsg of errorMessages) {
-            if (text.includes(errorMsg.toLowerCase())) {
-              this.debugLog(`🚨 ERROR ENCONTRADO (método 3, elemento rojo): "${text.substring(0, 50)}..."`);
-              return true;
-            }
-          }
+        if (text.includes('Please enter a lower number') || 
+            text.includes('please enter a lower number')) {
+          this.debugLog(`🚨 ERROR DETECTADO en ux-textspans: "${text}"`);
+          return true;
         }
       }
-    } catch (method3Error) {
-      this.debugLog(`⚠️ Error en método 3: ${method3Error.message}`);
+    } catch (textspansError) {
+      this.debugLog(`❌ Error buscando ux-textspans: ${textspansError.message}`);
+    }
+
+    // MÉTODO TERCIARIO: Búsqueda directa en toda la página
+    const pageText = (document.body.innerText || document.body.textContent || '').toLowerCase();
+    if (pageText.includes('please enter a lower number')) {
+      this.debugLog('🚨 ERROR DETECTADO en texto completo de página');
+      return true;
+    }
+
+    // MÉTODO CUATERNARIO: Buscar cualquier elemento que contenga el texto específico
+    try {
+      const allElements = document.querySelectorAll('*');
+      for (let element of allElements) {
+        const text = (element.textContent || '').trim();
+        
+        // Solo verificar textos cortos que puedan ser mensajes de error
+        if (text.length > 5 && text.length < 100 && 
+            (text.includes('Please enter a lower number') || 
+             text.includes('please enter a lower number'))) {
+          
+          this.debugLog(`🚨 ERROR DETECTADO en elemento genérico: "${text}" (tag: ${element.tagName}, class: ${element.className}, id: ${element.id})`);
+          return true;
+        }
+      }
+    } catch (genericError) {
+      this.debugLog(`❌ Error en búsqueda genérica: ${genericError.message}`);
     }
 
     this.debugLog('✅ No se detectaron errores');
