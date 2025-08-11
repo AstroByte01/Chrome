@@ -185,7 +185,7 @@ class EbayStockChecker {
   }
 
   findRequiredElements() {
-    console.log('Buscando elementos requeridos...');
+    this.debugLog('🔍 Buscando elementos requeridos...');
     
     // Lista de selectores para el campo de cantidad
     const quantitySelectors = [
@@ -205,19 +205,23 @@ class EbayStockChecker {
       const element = document.querySelector(selector);
       if (element) {
         this.quantityInput = element;
-        console.log(`Campo de cantidad encontrado con selector: ${selector}`, element);
+        this.debugLog(`✅ Campo de cantidad encontrado con selector: ${selector}`);
         break;
       }
     }
     
     if (!this.quantityInput) {
-      console.log('Buscando campos de texto que puedan ser cantidad...');
+      this.debugLog('🔍 Buscando campos de texto que puedan ser cantidad...');
       const allInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+      this.debugLog(`Encontrados ${allInputs.length} campos de entrada`);
+      
       for (let input of allInputs) {
         const value = input.value;
         const name = input.name || '';
         const id = input.id || '';
         const className = input.className || '';
+        
+        this.debugLog(`Campo: valor="${value}", name="${name}", id="${id}", class="${className}"`);
         
         // Si el input tiene valor "1" y está relacionado con cantidad
         if (value === '1' && (
@@ -228,7 +232,7 @@ class EbayStockChecker {
           className.toLowerCase().includes('qty')
         )) {
           this.quantityInput = input;
-          console.log('Campo de cantidad encontrado por heurística:', input);
+          this.debugLog('✅ Campo de cantidad encontrado por heurística');
           break;
         }
       }
@@ -250,18 +254,17 @@ class EbayStockChecker {
       const element = document.querySelector(selector);
       if (element) {
         this.addToCartBtn = element;
-        console.log(`Botón encontrado con selector: ${selector}`, element);
+        this.debugLog(`✅ Botón encontrado con selector: ${selector}`);
         break;
       }
     }
     
-    console.log('Elementos encontrados:', {
-      quantityInput: this.quantityInput ? 'SÍ' : 'NO',
-      quantityInputId: this.quantityInput?.id || 'Sin ID',
-      quantityInputName: this.quantityInput?.name || 'Sin nombre',
-      quantityInputValue: this.quantityInput?.value || 'Sin valor',
-      addToCartBtn: this.addToCartBtn ? 'SÍ' : 'NO'
-    });
+    this.debugLog(`📊 Resumen de elementos:
+      Campo cantidad: ${this.quantityInput ? 'SÍ' : 'NO'}
+      ID: ${this.quantityInput?.id || 'Sin ID'}
+      Nombre: ${this.quantityInput?.name || 'Sin nombre'}  
+      Valor: ${this.quantityInput?.value || 'Sin valor'}
+      Botón carrito: ${this.addToCartBtn ? 'SÍ' : 'NO'}`);
   }
 
   async startStockCheck() {
