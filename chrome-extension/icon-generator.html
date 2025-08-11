@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Íconos - eBay Stock Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .icon-canvas {
+            border: 2px solid #ddd;
+            margin: 10px;
+            border-radius: 8px;
+        }
+        .download-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 500;
+        }
+        button:hover {
+            transform: translateY(-1px);
+        }
+        .icon-preview {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .icon-size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Generador de Íconos - eBay Stock Checker</h1>
+        <p>Esta herramienta genera los íconos necesarios para la extensión de Chrome.</p>
+        
+        <div class="download-section">
+            <h3>Íconos Generados:</h3>
+            <div id="iconContainer"></div>
+            <button onclick="generateAllIcons()">Generar Todos los Íconos</button>
+            <button onclick="downloadAllIcons()">Descargar Todos</button>
+        </div>
+        
+        <div class="download-section">
+            <h3>Instrucciones:</h3>
+            <ol>
+                <li>Haz clic en "Generar Todos los Íconos"</li>
+                <li>Haz clic en "Descargar Todos" para obtener los archivos</li>
+                <li>Coloca los archivos descargados en la carpeta <code>chrome-extension</code></li>
+                <li>Los íconos son: icon16.png, icon32.png, icon48.png, icon128.png</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo con gradiente
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Borde redondeado
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Símbolo de eBay (E estilizada)
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📊', size/2, size/2);
+            
+            // Número pequeño en la esquina
+            ctx.fillStyle = '#FFD700';
+            ctx.font = `bold ${size * 0.2}px Arial`;
+            ctx.fillText('+', size * 0.7, size * 0.3);
+            
+            return canvas;
+        }
+        
+        function generateAllIcons() {
+            const container = document.getElementById('iconContainer');
+            container.innerHTML = '';
+            
+            const sizes = [16, 32, 48, 128];
+            
+            sizes.forEach(size => {
+                const canvas = createIcon(size);
+                const preview = document.createElement('div');
+                preview.className = 'icon-preview';
+                
+                const sizeLabel = document.createElement('div');
+                sizeLabel.className = 'icon-size';
+                sizeLabel.textContent = `${size}x${size}px`;
+                
+                preview.appendChild(canvas);
+                preview.appendChild(sizeLabel);
+                container.appendChild(preview);
+                
+                // Crear enlace de descarga
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    downloadLink.download = `icon${size}.png`;
+                    downloadLink.textContent = `Descargar ${size}px`;
+                    downloadLink.style.display = 'block';
+                    downloadLink.style.marginTop = '5px';
+                    downloadLink.style.fontSize = '12px';
+                    preview.appendChild(downloadLink);
+                });
+            });
+        }
+        
+        function downloadAllIcons() {
+            const sizes = [16, 32, 48, 128];
+            
+            sizes.forEach(size => {
+                const canvas = createIcon(size);
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `icon${size}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            });
+        }
+        
+        // Polyfill para roundRect si no está disponible
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+            };
+        }
+        
+        // Generar íconos al cargar la página
+        window.onload = function() {
+            generateAllIcons();
+        };
+    </script>
+</body>
+</html>
