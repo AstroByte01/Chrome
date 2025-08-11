@@ -509,6 +509,40 @@ class EbayStockChecker {
   }
 
   checkForError() {
+    // Primero buscar mensajes de error específicos de eBay
+    const specificErrorMessages = [
+      'Please enter a lower number',
+      'please enter a lower number', 
+      'Please enter a quantity of 1 or more',
+      'please enter a quantity of 1 or more',
+      'Quantity must be',
+      'quantity must be',
+      'exceeded',
+      'superado',
+      'maximum quantity',
+      'cantidad máxima',
+      'available quantity',
+      'cantidad disponible',
+      'inventory limit',
+      'límite de inventario',
+      'enter a lower',
+      'ingresa un número menor',
+      'ingresa una cantidad',
+      'la cantidad debe ser'
+    ];
+
+    // Buscar en todo el texto de la página primero
+    const pageText = document.body.innerText || document.body.textContent || '';
+    const lowerPageText = pageText.toLowerCase();
+    
+    for (let errorMsg of specificErrorMessages) {
+      if (lowerPageText.includes(errorMsg.toLowerCase())) {
+        this.debugLog(`🚨 Error detectado en página: "${errorMsg}"`);
+        return true;
+      }
+    }
+
+    // Buscar en elementos específicos con selectores más amplios
     const errorSelectors = [
       '.ux-textspans', 
       '.error', 
@@ -517,35 +551,54 @@ class EbayStockChecker {
       '#qtyErrMsg',
       '[class*="error"]',
       '[class*="notice"]',
-      '[id*="error"]'
+      '[class*="alert"]',
+      '[id*="error"]',
+      '[style*="color: red"]',
+      '[style*="color:red"]',
+      '*[class*="text-"]', // Clases que contengan text-
+      'span[class*="ux-"]'   // Elementos span con clases ux-
     ];
     
     for (let selector of errorSelectors) {
       try {
         const errorMessages = document.querySelectorAll(selector);
         for (let errorEl of errorMessages) {
-          const errorText = errorEl.textContent.toLowerCase();
-          if (errorText.includes('please enter a quantity of 1 or more') ||
-              errorText.includes('ingresa una cantidad de 1 o más') ||
-              errorText.includes('quantity must be') ||
-              errorText.includes('la cantidad debe ser') ||
-              errorText.includes('exceeded') ||
-              errorText.includes('superado') ||
-              errorText.includes('maximum quantity') ||
-              errorText.includes('cantidad máxima') ||
-              errorText.includes('available quantity') ||
-              errorText.includes('cantidad disponible') ||
-              errorText.includes('inventory limit') ||
-              errorText.includes('límite de inventario')) {
-            
-            this.debugLog(`⚠️ Error detectado: "${errorText.substring(0, 50)}..."`);
-            return true;
+          const errorText = (errorEl.textContent || errorEl.innerText || '').toLowerCase();
+          
+          // Buscar cualquier mensaje de error
+          for (let errorMsg of specificErrorMessages) {
+            if (errorText.includes(errorMsg.toLowerCase())) {
+              this.debugLog(`🚨 Error detectado con selector "${selector}": "${errorText.substring(0, 50)}..."`);
+              return true;
+            }
           }
         }
       } catch (error) {
         this.debugLog(`❌ Error con selector "${selector}": ${error.message}`);
       }
     }
+
+    // Búsqueda adicional en elementos que pueden contener errores
+    try {
+      const allElements = document.querySelectorAll('*');
+      for (let element of allElements) {
+        const text = (element.textContent || element.innerText || '').toLowerCase();
+        const style = window.getComputedStyle(element);
+        
+        // Si el elemento tiene texto rojo y contiene un mensaje de error
+        if (style.color.includes('rgb(255') || style.color.includes('red')) {
+          for (let errorMsg of specificErrorMessages) {
+            if (text.includes(errorMsg.toLowerCase()) && text.length < 100) { // Evitar textos muy largos
+              this.debugLog(`🚨 Error detectado por color rojo: "${text.substring(0, 50)}..."`);
+              return true;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      this.debugLog(`❌ Error en búsqueda por color: ${error.message}`);
+    }
+    
     return false;
   }
 
