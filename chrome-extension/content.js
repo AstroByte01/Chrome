@@ -246,16 +246,36 @@ class EbayStockChecker {
       'a[href*="addToCart"]',
       '[data-testid="atc-cta-button"]',
       'button[class*="btn-prim"]',
-      'button:contains("Buy It Now")',
-      'a:contains("Buy It Now")'
+      'button[class*="primary"]',
+      'a[class*="btn"]'
     ];
     
     for (let selector of cartButtonSelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        this.addToCartBtn = element;
-        this.debugLog(`✅ Botón encontrado con selector: ${selector}`);
-        break;
+      try {
+        const element = document.querySelector(selector);
+        if (element) {
+          this.addToCartBtn = element;
+          this.debugLog(`✅ Botón encontrado con selector: ${selector}`);
+          break;
+        }
+      } catch (error) {
+        this.debugLog(`❌ Error con selector "${selector}": ${error.message}`);
+      }
+    }
+    
+    // Si no encontramos botón, buscar por texto usando búsqueda manual
+    if (!this.addToCartBtn) {
+      this.debugLog('🔍 Buscando botón por texto...');
+      const allButtons = document.querySelectorAll('button, a');
+      for (let btn of allButtons) {
+        const text = btn.textContent || btn.innerText || '';
+        if (text.toLowerCase().includes('buy it now') || 
+            text.toLowerCase().includes('add to cart') ||
+            text.toLowerCase().includes('comprar ahora')) {
+          this.addToCartBtn = btn;
+          this.debugLog(`✅ Botón encontrado por texto: "${text}"`);
+          break;
+        }
       }
     }
     
