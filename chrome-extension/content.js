@@ -404,6 +404,8 @@ class EbayStockChecker {
     let maxQuantity = 0;
     const maxAttempts = 500;
     
+    this.debugLog('🔄 Iniciando búsqueda incremental...');
+    
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         this.quantityInput.value = currentQuantity;
@@ -415,6 +417,7 @@ class EbayStockChecker {
 
         if (this.checkForError()) {
           maxQuantity = currentQuantity - 1;
+          this.debugLog(`🎯 Límite encontrado en: ${maxQuantity}`);
           break;
         }
 
@@ -430,7 +433,7 @@ class EbayStockChecker {
         }
 
       } catch (error) {
-        console.error('Error en búsqueda incremental:', error);
+        this.debugLog(`❌ Error en búsqueda incremental: ${error.message}`);
         break;
       }
     }
@@ -440,6 +443,7 @@ class EbayStockChecker {
     this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
     this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
+    this.debugLog(`📊 Búsqueda incremental completada: ${maxQuantity}`);
     return maxQuantity;
   }
 
