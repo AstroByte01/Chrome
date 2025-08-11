@@ -294,7 +294,7 @@ class EbayStockChecker {
 
   async findRealStock() {
     if (!this.quantityInput) {
-      console.log('No se encontró el campo de cantidad');
+      this.debugLog('❌ No se encontró el campo de cantidad');
       return 0;
     }
 
@@ -304,7 +304,7 @@ class EbayStockChecker {
     
     // Guardar valor original
     const originalValue = this.quantityInput.value;
-    console.log('Iniciando verificación de stock, valor original:', originalValue);
+    this.debugLog(`🔄 Iniciando verificación, valor original: ${originalValue}`);
 
     // Estrategia de búsqueda binaria modificada
     let low = 11;
@@ -324,18 +324,20 @@ class EbayStockChecker {
         if (this.checkForError()) {
           high = testQuantity;
           foundLimit = true;
+          this.debugLog(`🎯 Límite superior encontrado: ${testQuantity}`);
           break;
         }
         
         this.updateDisplayText(`🔄 Buscando límite... ${testQuantity}`);
+        this.debugLog(`📊 Probando límite: ${testQuantity} - Sin error`);
       } catch (error) {
-        console.error('Error en búsqueda de límite:', error);
+        this.debugLog(`❌ Error en búsqueda de límite: ${error.message}`);
         break;
       }
     }
 
     if (!foundLimit) {
-      console.log('No se encontró límite superior, usando búsqueda incremental');
+      this.debugLog('⚠️ No se encontró límite superior, usando búsqueda incremental');
       return await this.incrementalSearch(originalValue);
     }
 
@@ -353,15 +355,17 @@ class EbayStockChecker {
         
         if (this.checkForError()) {
           high = mid;
+          this.debugLog(`📊 Binaria: ${mid} = ERROR, nuevo high: ${high}`);
         } else {
           low = mid;
           maxQuantity = mid;
+          this.debugLog(`📊 Binaria: ${mid} = OK, nuevo low: ${low}`);
         }
         
         this.updateDisplayText(`🔄 Verificando... ${mid} (${low}-${high})`);
         
       } catch (error) {
-        console.error('Error en búsqueda binaria:', error);
+        this.debugLog(`❌ Error en búsqueda binaria: ${error.message}`);
         break;
       }
     }
@@ -371,7 +375,7 @@ class EbayStockChecker {
     this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
     this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-    console.log('Stock real encontrado:', maxQuantity);
+    this.debugLog(`🎉 Stock real encontrado: ${maxQuantity}`);
     return maxQuantity;
   }
 
