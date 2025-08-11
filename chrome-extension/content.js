@@ -381,58 +381,54 @@ class EbayStockChecker {
 
     // Guardar valor original
     const originalValue = this.quantityInput.value;
-    this.debugLog(`🔄 Iniciando verificación, valor original: ${originalValue}`);
+    this.debugLog(`🔄 Iniciando verificación simple de 1 en 1, valor original: ${originalValue}`);
 
-    // Estrategia mejorada: empezar con búsqueda binaria directa
-    let low = 11;
-    let high = 10000; // Límite más alto inicial
+    let currentQuantity = 11; // Empezar desde 11 (ya sabemos que hay más de 10)
     let maxQuantity = 0;
-    let attempt = 0;
-    const maxAttempts = 50; // Reducir intentos para ser más eficiente
+    const maxAttempts = 10000; // Límite alto para productos con mucho stock
+    
+    this.debugLog('🎯 Usando lógica simple: incrementar de 1 en 1 hasta error');
 
-    this.debugLog(`🎯 Usando búsqueda binaria: rango inicial ${low}-${high}`);
-
-    while (low <= high && attempt < maxAttempts) {
-      const mid = Math.floor((low + high) / 2);
-      attempt++;
-      
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        this.debugLog(`📊 Intento ${attempt}: probando cantidad ${mid}`);
+        this.debugLog(`📊 Probando cantidad: ${currentQuantity}`);
         
-        // Establecer valor y disparar eventos
-        this.quantityInput.value = mid;
+        // Establecer valor
+        this.quantityInput.value = currentQuantity;
+        this.quantityInput.focus();
+        
+        // Disparar todos los eventos posibles
         this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
         this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
         this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
         this.quantityInput.dispatchEvent(new Event('blur', { bubbles: true }));
         
-        // Esperar a que se procese
-        await this.sleep(400); // Aumentar tiempo de espera
+        // Esperar a que eBay procese
+        await this.sleep(500); // Tiempo suficiente para que aparezca el error
         
-        // Verificar error
+        // Verificar si hay error
         const hasError = this.checkForError();
         
         if (hasError) {
-          this.debugLog(`🚨 Error detectado en ${mid}, ajustando high a ${mid - 1}`);
-          high = mid - 1;
+          maxQuantity = currentQuantity - 1; // El anterior es el máximo
+          this.debugLog(`🎉 ¡ERROR DETECTADO en ${currentQuantity}! Stock real: ${maxQuantity}`);
+          break;
         } else {
-          this.debugLog(`✅ Sin error en ${mid}, ajustando low a ${mid + 1}`);
-          maxQuantity = mid;
-          low = mid + 1;
+          this.debugLog(`✅ Sin error en ${currentQuantity}, continuando...`);
         }
         
-        this.updateDisplayText(`🔄 Verificando... ${mid} (${low}-${high}) [${attempt}/${maxAttempts}]`);
+        // Actualizar display cada 10 intentos para no saturar
+        if (attempt % 10 === 0) {
+          this.updateDisplayText(`🔄 Verificando... ${currentQuantity}`);
+        }
+        
+        // Incrementar de 1 en 1
+        currentQuantity++;
         
       } catch (error) {
-        this.debugLog(`❌ Error en búsqueda binaria: ${error.message}`);
+        this.debugLog(`❌ Error en intento ${attempt}: ${error.message}`);
         break;
       }
-    }
-
-    // Si no encontramos nada, probar búsqueda incremental pequeña
-    if (maxQuantity === 0) {
-      this.debugLog('⚠️ Búsqueda binaria sin resultados, probando incremental...');
-      maxQuantity = await this.incrementalSearchSmall(originalValue);
     }
 
     // Restaurar valor original
@@ -440,51 +436,7 @@ class EbayStockChecker {
     this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
     this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-    this.debugLog(`🎉 Stock real encontrado: ${maxQuantity} después de ${attempt} intentos`);
-    return maxQuantity;
-  }
-
-  async incrementalSearchSmall(originalValue) {
-    let currentQuantity = 11;
-    let maxQuantity = 0;
-    const maxAttempts = 100; // Búsqueda más limitada
-    
-    this.debugLog('🔄 Iniciando búsqueda incremental pequeña...');
-    
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        this.quantityInput.value = currentQuantity;
-        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('blur', { bubbles: true }));
-        
-        await this.sleep(300);
-
-        if (this.checkForError()) {
-          maxQuantity = currentQuantity - 1;
-          this.debugLog(`🎯 Límite encontrado en: ${maxQuantity}`);
-          break;
-        }
-
-        this.updateDisplayText(`🔄 Incremental... ${currentQuantity}`);
-        
-        // Incrementar más conservadoramente
-        if (currentQuantity < 50) {
-          currentQuantity += 5;
-        } else if (currentQuantity < 200) {
-          currentQuantity += 10;
-        } else {
-          currentQuantity += 25;
-        }
-
-      } catch (error) {
-        this.debugLog(`❌ Error en búsqueda incremental: ${error.message}`);
-        break;
-      }
-    }
-
-    this.debugLog(`📊 Búsqueda incremental completada: ${maxQuantity}`);
+    this.debugLog(`🎉 RESULTADO FINAL: Stock real encontrado = ${maxQuantity}`);
     return maxQuantity;
   }
 
