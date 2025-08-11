@@ -609,108 +609,104 @@ class EbayStockChecker {
   }
 
   checkForError() {
-    this.debugLog('🔍 Buscando mensajes de error ESPECÍFICOS...');
+    this.debugLog('🔍 Verificando errores...');
 
-    // MÉTODO 1: Buscar texto exacto "Please enter a lower number" en toda la página
-    const fullPageText = document.body.innerText || document.body.textContent || '';
-    
-    if (fullPageText.includes('Please enter a lower number')) {
-      this.debugLog('🚨 ENCONTRADO: "Please enter a lower number" en página completa');
-      return true;
-    }
-    
-    if (fullPageText.includes('please enter a lower number')) {
-      this.debugLog('🚨 ENCONTRADO: "please enter a lower number" en página completa');
-      return true;
-    }
-
-    // MÉTODO 2: Buscar elementos rojos cerca del campo de cantidad
-    try {
-      const quantityContainer = this.quantityInput.parentElement;
-      const nearbyElements = quantityContainer ? 
-        quantityContainer.querySelectorAll('*') : 
-        document.querySelectorAll('*');
-
-      for (let element of nearbyElements) {
-        const text = element.textContent || element.innerText || '';
-        const computedStyle = window.getComputedStyle(element);
-        
-        // Si es un elemento rojo Y contiene texto relacionado con error
-        if (computedStyle.color.includes('rgb(255') || 
-            computedStyle.color.includes('red') ||
-            computedStyle.color.includes('rgba(255')) {
-          
-          if (text.toLowerCase().includes('please enter a lower') ||
-              text.toLowerCase().includes('enter a lower') ||
-              text.toLowerCase().includes('lower number') ||
-              text.toLowerCase().includes('not available') ||
-              text.toLowerCase().includes('insufficient')) {
-            
-            this.debugLog(`🚨 ENCONTRADO elemento rojo con error: "${text}"`);
-            return true;
-          }
-        }
-      }
-    } catch (error) {
-      this.debugLog(`❌ Error buscando elementos rojos: ${error.message}`);
-    }
-
-    // MÉTODO 3: Buscar cambios en el DOM después de cambiar cantidad
-    try {
-      // Buscar elementos que aparecieron recientemente
-      const allSpans = document.querySelectorAll('span');
-      const allDivs = document.querySelectorAll('div');
-      const allElements = [...allSpans, ...allDivs];
-      
-      for (let element of allElements) {
-        const text = (element.textContent || '').toLowerCase();
-        
-        // Si contiene palabras clave de error y tiene poco texto (es un mensaje específico)
-        if (text.length > 5 && text.length < 100) {
-          if (text.includes('please enter a lower') ||
-              text.includes('enter a lower number') ||
-              text.includes('lower number') ||
-              text.includes('quantity must be') ||
-              text.includes('maximum') ||
-              text.includes('limit') ||
-              text.includes('exceeded') ||
-              text.includes('not enough') ||
-              text.includes('insufficient stock')) {
-            
-            this.debugLog(`🚨 ENCONTRADO mensaje de error: "${text}"`);
-            return true;
-          }
-        }
-      }
-    } catch (error) {
-      this.debugLog(`❌ Error buscando en DOM: ${error.message}`);
-    }
-
-    // MÉTODO 4: Verificar si apareció algún elemento de notificación/error
-    const errorClasses = [
-      '.error', '.Error', '.ERROR',
-      '.notice', '.Notice', '.NOTICE',
-      '.alert', '.Alert', '.ALERT',
-      '.warning', '.Warning', '.WARNING',
-      '.message', '.Message', '.MESSAGE'
+    // Lista de mensajes de error específicos de eBay
+    const errorMessages = [
+      'Please enter a lower number',
+      'please enter a lower number',
+      'Please enter a quantity of 1 or more',
+      'please enter a quantity of 1 or more',
+      'The quantity entered is not available',
+      'quantity entered is not available',
+      'not available',
+      'insufficient quantity',
+      'insufficient stock',
+      'exceeded maximum',
+      'exceeds available',
+      'limit exceeded',
+      'too many items',
+      'maximum quantity',
+      'enter a lower',
+      'lower number'
     ];
 
-    for (let className of errorClasses) {
-      try {
-        const elements = document.querySelectorAll(className);
-        for (let element of elements) {
-          const text = (element.textContent || '').toLowerCase();
-          if (text.includes('lower') || text.includes('limit') || text.includes('maximum')) {
-            this.debugLog(`🚨 ENCONTRADO en clase ${className}: "${text}"`);
-            return true;
-          }
-        }
-      } catch (error) {
-        // Continuar con el siguiente selector
+    // MÉTODO 1: Búsqueda directa en el texto completo de la página
+    const pageText = (document.body.innerText || document.body.textContent || '').toLowerCase();
+    
+    for (let errorMsg of errorMessages) {
+      if (pageText.includes(errorMsg.toLowerCase())) {
+        this.debugLog(`🚨 ERROR ENCONTRADO (método 1): "${errorMsg}"`);
+        return true;
       }
     }
 
-    this.debugLog('✅ No se detectaron errores con métodos específicos');
+    // MÉTODO 2: Buscar elementos específicos que puedan contener errores
+    const errorSelectors = [
+      // Selectores específicos de eBay
+      '[class*="error"]', '[class*="Error"]', '[class*="ERROR"]',
+      '[class*="notice"]', '[class*="Notice"]', '[class*="NOTICE"]', 
+      '[class*="alert"]', '[class*="Alert"]', '[class*="ALERT"]',
+      '[class*="warning"]', '[class*="Warning"]', '[class*="WARNING"]',
+      '[class*="message"]', '[class*="Message"]', '[class*="MESSAGE"]',
+      // Selectores de elementos rojos o con estilos de error
+      '[style*="color: red"]', '[style*="color:red"]', '[style*="color: #ff"]',
+      '[style*="color:#ff"]', '[style*="color: rgb(255"]',
+      // Selectores cerca del campo de cantidad
+      '.textbox__error-msg', '#qtyErrMsg', '[id*="error"]', '[id*="Error"]'
+    ];
+
+    for (let selector of errorSelectors) {
+      try {
+        const elements = document.querySelectorAll(selector);
+        for (let element of elements) {
+          const text = (element.textContent || element.innerText || '').toLowerCase();
+          
+          // Solo considerar textos de longitud razonable para mensajes de error
+          if (text.length > 3 && text.length < 200) {
+            for (let errorMsg of errorMessages) {
+              if (text.includes(errorMsg.toLowerCase())) {
+                this.debugLog(`🚨 ERROR ENCONTRADO (método 2, selector: ${selector}): "${text.substring(0, 50)}..."`);
+                return true;
+              }
+            }
+          }
+        }
+      } catch (selectorError) {
+        // Continuar con el siguiente selector si este falla
+        continue;
+      }
+    }
+
+    // MÉTODO 3: Buscar elementos que cambiaron recientemente y tienen colores de error
+    try {
+      const allElements = document.querySelectorAll('*');
+      const now = Date.now();
+      
+      for (let element of allElements) {
+        const computedStyle = window.getComputedStyle(element);
+        const text = (element.textContent || '').toLowerCase();
+        
+        // Si el elemento tiene color rojo y texto relevante
+        if ((computedStyle.color.includes('rgb(255') || 
+             computedStyle.color.includes('red') ||
+             computedStyle.color.includes('#ff') ||
+             computedStyle.color.includes('#f00')) &&
+            text.length > 5 && text.length < 150) {
+          
+          for (let errorMsg of errorMessages) {
+            if (text.includes(errorMsg.toLowerCase())) {
+              this.debugLog(`🚨 ERROR ENCONTRADO (método 3, elemento rojo): "${text.substring(0, 50)}..."`);
+              return true;
+            }
+          }
+        }
+      }
+    } catch (method3Error) {
+      this.debugLog(`⚠️ Error en método 3: ${method3Error.message}`);
+    }
+
+    this.debugLog('✅ No se detectaron errores');
     return false;
   }
 
