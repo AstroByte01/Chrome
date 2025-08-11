@@ -21,6 +21,13 @@ class EbayStockChecker {
 
     // Observer para detectar cambios dinámicos
     this.setupMutationObserver();
+    
+    // Escuchar evento personalizado para forzar verificación
+    document.addEventListener('forceStockCheck', () => {
+      console.log('Forzando verificación de stock...');
+      this.isChecking = false; // Reset del estado
+      this.findAndReplaceStock();
+    });
   }
 
   setupMutationObserver() {
