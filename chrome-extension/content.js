@@ -272,17 +272,20 @@ class EbayStockChecker {
     
     this.isChecking = true;
     this.updateDisplayText('🔄 Verificando stock real...');
+    this.debugLog('🚀 Iniciando verificación de stock...');
 
     try {
       const realStock = await this.findRealStock();
       
       if (realStock > 0) {
         this.updateDisplayText(`${realStock} disponibles ✅`);
+        this.debugLog(`✅ Stock real encontrado: ${realStock}`);
       } else {
         this.updateDisplayText('Stock no determinado ❌');
+        this.debugLog('❌ No se pudo determinar el stock real');
       }
     } catch (error) {
-      console.error('Error al verificar stock:', error);
+      this.debugLog(`❌ Error al verificar stock: ${error.message}`);
       this.updateDisplayText('Error al verificar stock ❌');
     } finally {
       this.isChecking = false;
