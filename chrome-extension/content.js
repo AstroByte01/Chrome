@@ -66,13 +66,14 @@ class EbayStockChecker {
   }
 
   init() {
-    console.log('eBay Stock Checker iniciado');
+    this.debugLog('eBay Stock Checker iniciado');
+    this.createDebugPanel();
     
     // Esperar a que la página cargue completamente
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.findAndReplaceStock());
     } else {
-      this.findAndReplaceStock();
+      setTimeout(() => this.findAndReplaceStock(), 1000);
     }
 
     // Observer para detectar cambios dinámicos
@@ -80,7 +81,7 @@ class EbayStockChecker {
     
     // Escuchar evento personalizado para forzar verificación
     document.addEventListener('forceStockCheck', () => {
-      console.log('Forzando verificación de stock...');
+      this.debugLog('🔄 Forzando verificación de stock...');
       this.isChecking = false; // Reset del estado
       this.findAndReplaceStock();
     });
