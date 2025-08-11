@@ -352,11 +352,22 @@ class EbayStockChecker {
     if (this.isChecking) return;
     
     this.isChecking = true;
-    this.updateDisplayText('🔄 Verificando stock real...');
-    this.debugLog('🚀 Iniciando verificación de stock...');
+    this.updateDisplayText('🔄 Verificando stock real... (puede tomar tiempo)');
+    this.debugLog('🚀 Iniciando verificación de stock LENTA para evitar bloqueo...');
+
+    // Guardar URL inicial para detectar redirecciones
+    const initialUrl = window.location.href;
+    this.debugLog(`📍 URL inicial: ${initialUrl}`);
 
     try {
       const realStock = await this.findRealStock();
+      
+      // Verificar si la página cambió durante el proceso
+      if (window.location.href !== initialUrl) {
+        this.debugLog(`⚠️ PÁGINA CAMBIÓ durante verificación: ${window.location.href}`);
+        this.updateDisplayText('⚠️ Página cambió durante verificación');
+        return;
+      }
       
       if (realStock > 0) {
         this.updateDisplayText(`${realStock} disponibles ✅`);
