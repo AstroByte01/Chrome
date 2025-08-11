@@ -106,7 +106,7 @@ class EbayStockChecker {
   findAndReplaceStock() {
     if (this.isChecking) return;
 
-    console.log('Buscando elementos con "More than 10 available"...');
+    this.debugLog('🔍 Buscando elementos con "More than 10 available"...');
 
     // Buscar el elemento con "More than 10 available" - múltiples selectores
     const possibleSelectors = [
@@ -122,9 +122,9 @@ class EbayStockChecker {
     let foundElement = null;
     
     for (let selector of possibleSelectors) {
-      console.log(`Probando selector: ${selector}`);
+      this.debugLog(`Probando selector: ${selector}`);
       const elements = document.querySelectorAll(selector);
-      console.log(`Encontrados ${elements.length} elementos con selector ${selector}`);
+      this.debugLog(`Encontrados ${elements.length} elementos con selector ${selector}`);
       
       for (let element of elements) {
         const text = element.textContent || '';
@@ -132,11 +132,7 @@ class EbayStockChecker {
             text.includes('Más de 10 disponibles') ||
             text.includes('more than 10 available')) {
           
-          console.log('¡Elemento encontrado!', {
-            selector: selector,
-            text: text,
-            element: element
-          });
+          this.debugLog(`✅ ¡Elemento encontrado! Selector: ${selector}, Texto: "${text}"`);
           
           foundElement = element;
           break;
@@ -150,34 +146,41 @@ class EbayStockChecker {
       this.targetElement = foundElement;
       this.originalText = foundElement.textContent;
       
-      console.log('Elemento objetivo establecido:', {
-        text: this.originalText,
-        element: this.targetElement
-      });
+      this.debugLog(`🎯 Elemento objetivo establecido: "${this.originalText}"`);
       
       // Buscar elementos necesarios para la prueba
       this.findRequiredElements();
       
       if (this.quantityInput) {
-        console.log('Campo de cantidad encontrado, iniciando verificación...');
+        this.debugLog('✅ Campo de cantidad encontrado, iniciando verificación...');
         this.startStockCheck();
       } else {
-        console.log('Campo de cantidad NO encontrado, intentando búsqueda alternativa...');
+        this.debugLog('❌ Campo de cantidad NO encontrado, intentando búsqueda alternativa...');
         this.updateDisplayText('⚠️ Buscando campo de cantidad...');
         
         // Intentar una búsqueda más agresiva después de un delay
         setTimeout(() => {
           this.findRequiredElements();
           if (this.quantityInput) {
-            console.log('Campo encontrado en segundo intento');
+            this.debugLog('✅ Campo encontrado en segundo intento');
             this.startStockCheck();
           } else {
             this.updateDisplayText('❌ No se pudo encontrar campo de cantidad');
+            this.debugLog('❌ FALLO: No se encontró campo de cantidad después de reintentos');
           }
         }, 2000);
       }
     } else {
-      console.log('No se encontró el elemento "More than 10 available"');
+      this.debugLog('❌ No se encontró el elemento "More than 10 available"');
+      this.debugLog('🔍 Haciendo búsqueda de texto libre...');
+      
+      // Búsqueda de texto libre en toda la página
+      const allText = document.body.innerText || document.body.textContent || '';
+      if (allText.includes('More than 10 available')) {
+        this.debugLog('✅ Texto encontrado en la página, pero elemento no localizado');
+      } else {
+        this.debugLog('❌ Texto "More than 10 available" no encontrado en la página');
+      }
     }
   }
 
