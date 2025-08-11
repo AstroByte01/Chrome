@@ -110,81 +110,75 @@ class EbayStockChecker {
   }
 
   async findRealStock() {
-    if (!this.quantityInput) return 0;
+    if (!this.quantityInput) {
+      console.log('No se encontró el campo de cantidad');
+      return 0;
+    }
 
     let currentQuantity = 11; // Empezar desde 11
     let maxQuantity = 0;
-    const maxAttempts = 100; // Límite de seguridad
+    const maxAttempts = 200; // Límite de seguridad aumentado
     
     // Guardar valor original
     const originalValue = this.quantityInput.value;
+    console.log('Iniciando verificación de stock, valor original:', originalValue);
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Estrategia de búsqueda binaria modificada
+    let low = 11;
+    let high = 1000; // Empezar con un límite alto
+    let foundLimit = false;
+
+    // Primero, encontrar un límite superior aproximado
+    for (let testQuantity = 50; testQuantity <= 2000; testQuantity *= 2) {
       try {
-        // Establecer cantidad
-        this.quantityInput.value = currentQuantity;
+        this.quantityInput.value = testQuantity;
         this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
         this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
         
-        // Esperar un poco para que se procese
-        await this.sleep(200);
+        await this.sleep(300);
 
-        // Verificar si hay mensaje de error
-        const errorMessages = document.querySelectorAll('.ux-textspans, .error, .ebay-notice-content, .textbox__error-msg, #qtyErrMsg');
-        let hasError = false;
-
-        for (let errorEl of errorMessages) {
-          const errorText = errorEl.textContent.toLowerCase();
-          if (errorText.includes('please enter a quantity of 1 or more') ||
-              errorText.includes('ingresa una cantidad de 1 o más') ||
-              errorText.includes('quantity must be') ||
-              errorText.includes('la cantidad debe ser') ||
-              errorText.includes('exceeded') ||
-              errorText.includes('superado') ||
-              errorText.includes('maximum quantity') ||
-              errorText.includes('cantidad máxima') ||
-              errorText.includes('available quantity') ||
-              errorText.includes('cantidad disponible') ||
-              errorText.includes('inventory limit') ||
-              errorText.includes('límite de inventario')) {
-            hasError = true;
-            console.log('Error detectado:', errorText);
-            break;
-          }
-        }
-
-        if (hasError) {
-          maxQuantity = currentQuantity - 1;
+        if (this.checkForError()) {
+          high = testQuantity;
+          foundLimit = true;
           break;
         }
-
-        // Actualizar display con progreso
-        this.updateDisplayText(`🔄 Verificando... ${currentQuantity}`);
         
-        currentQuantity += 10; // Incrementar en pasos de 10 para ir más rápido
-        
-        // Si llegamos muy alto, cambiar a incrementos de 1
-        if (currentQuantity > 500) {
-          currentQuantity = maxQuantity + 1;
-          for (let i = currentQuantity; i < currentQuantity + 50; i++) {
-            this.quantityInput.value = i;
-            this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await this.sleep(100);
-            
-            const hasDetailedError = Array.from(errorMessages).some(el => 
-              el.textContent.toLowerCase().includes('please enter a quantity of 1 or more')
-            );
-            
-            if (hasDetailedError) {
-              maxQuantity = i - 1;
-              break;
-            }
-          }
-          break;
-        }
-
+        this.updateDisplayText(`🔄 Buscando límite... ${testQuantity}`);
       } catch (error) {
-        console.error('Error en intento:', error);
+        console.error('Error en búsqueda de límite:', error);
+        break;
+      }
+    }
+
+    if (!foundLimit) {
+      console.log('No se encontró límite superior, usando búsqueda incremental');
+      return await this.incrementalSearch(originalValue);
+    }
+
+    // Ahora usar búsqueda binaria para encontrar el valor exacto
+    while (low < high - 1) {
+      const mid = Math.floor((low + high) / 2);
+      
+      try {
+        this.quantityInput.value = mid;
+        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+        
+        await this.sleep(250);
+        
+        if (this.checkForError()) {
+          high = mid;
+        } else {
+          low = mid;
+          maxQuantity = mid;
+        }
+        
+        this.updateDisplayText(`🔄 Verificando... ${mid} (${low}-${high})`);
+        
+      } catch (error) {
+        console.error('Error en búsqueda binaria:', error);
         break;
       }
     }
@@ -192,8 +186,77 @@ class EbayStockChecker {
     // Restaurar valor original
     this.quantityInput.value = originalValue;
     this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+    this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+    console.log('Stock real encontrado:', maxQuantity);
+    return maxQuantity;
+  }
+
+  async incrementalSearch(originalValue) {
+    let currentQuantity = 11;
+    let maxQuantity = 0;
+    const maxAttempts = 500;
+    
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        this.quantityInput.value = currentQuantity;
+        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+        
+        await this.sleep(200);
+
+        if (this.checkForError()) {
+          maxQuantity = currentQuantity - 1;
+          break;
+        }
+
+        this.updateDisplayText(`🔄 Verificando... ${currentQuantity}`);
+        
+        // Incrementar inteligentemente
+        if (currentQuantity < 100) {
+          currentQuantity += 10;
+        } else if (currentQuantity < 500) {
+          currentQuantity += 25;
+        } else {
+          currentQuantity += 50;
+        }
+
+      } catch (error) {
+        console.error('Error en búsqueda incremental:', error);
+        break;
+      }
+    }
+
+    // Restaurar valor original
+    this.quantityInput.value = originalValue;
+    this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+    this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
     return maxQuantity;
+  }
+
+  checkForError() {
+    const errorMessages = document.querySelectorAll('.ux-textspans, .error, .ebay-notice-content, .textbox__error-msg, #qtyErrMsg');
+    
+    for (let errorEl of errorMessages) {
+      const errorText = errorEl.textContent.toLowerCase();
+      if (errorText.includes('please enter a quantity of 1 or more') ||
+          errorText.includes('ingresa una cantidad de 1 o más') ||
+          errorText.includes('quantity must be') ||
+          errorText.includes('la cantidad debe ser') ||
+          errorText.includes('exceeded') ||
+          errorText.includes('superado') ||
+          errorText.includes('maximum quantity') ||
+          errorText.includes('cantidad máxima') ||
+          errorText.includes('available quantity') ||
+          errorText.includes('cantidad disponible') ||
+          errorText.includes('inventory limit') ||
+          errorText.includes('límite de inventario')) {
+        return true;
+      }
+    }
+    return false;
   }
 
   updateDisplayText(text) {
