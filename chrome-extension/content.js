@@ -578,6 +578,10 @@ class EbayStockChecker {
 
       this.debugLog(`🧪 Probando cantidad: ${quantity}`);
 
+      // DIAGNÓSTICO: Verificar si existe el elemento de error ANTES
+      const errorElementBefore = document.querySelector('#qtyErrMsg > span');
+      this.debugLog(`📋 Elemento error ANTES: ${errorElementBefore ? errorElementBefore.textContent : 'No existe'}`);
+
       // Establecer valor
       this.quantityInput.value = quantity;
       this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -587,7 +591,17 @@ class EbayStockChecker {
       // Esperar procesamiento con timeout
       await this.sleep(800); // 800ms debería ser suficiente
 
-      // Verificar error
+      // DIAGNÓSTICO: Verificar si existe el elemento de error DESPUÉS
+      const errorElementAfter = document.querySelector('#qtyErrMsg > span');
+      this.debugLog(`📋 Elemento error DESPUÉS: ${errorElementAfter ? errorElementAfter.textContent : 'No existe'}`);
+
+      // Si el elemento apareció o cambió, es un error
+      if (errorElementAfter && errorElementAfter.textContent.trim() !== '') {
+        this.debugLog(`🚨 ELEMENTO ERROR DETECTADO DIRECTAMENTE: "${errorElementAfter.textContent}"`);
+        return false; // Hay error, cantidad no válida
+      }
+
+      // Verificar error con función principal
       const hasError = this.checkForError();
       
       if (hasError) {
