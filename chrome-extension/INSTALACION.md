@@ -102,6 +102,6 @@ Prueba con estos productos de ejemplo:
 Si ves el icono de la extensión sin errores rojos, la instalación fue exitosa.
 
 ---
-**Versión:** 1.0.1  
+**Versión:** 1.0.3  
 **Compatible con:** Chrome (Manifest V3)  
 **Sitios:** eBay.com, eBay.es, eBay.co.uk
