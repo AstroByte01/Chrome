@@ -3,6 +3,19 @@
 ## ✅ PROBLEMA RESUELTO
 Los iconos han sido creados automáticamente. La extensión está completa y lista para instalar.
 
+## ✅ LÓGICA CORREGIDA EN v1.0.3
+
+### 🎯 **Algoritmo Simplificado**
+- ✅ **Lógica simple**: Incrementar de 1 en 1 desde 11
+- ✅ **Detección directa**: Cuando aparece error, el anterior es el stock real
+- ✅ **Sin complejidad**: No más búsqueda binaria confusa
+- ✅ **Enfoque directo**: Si 3401 da error, entonces 3400 es el stock
+
+### 🔧 **Correcciones Específicas**
+- ❌ **Antes**: Búsqueda binaria compleja que no funcionaba bien
+- ✅ **Ahora**: Incremento simple 11, 12, 13, 14... hasta error
+- ✅ **Resultado**: Cuando encuentra "Please enter a lower number", para y toma el anterior
+
 ## ✅ ERRORES CORREGIDOS EN v1.0.1
 
 ### 🔧 Selector inválido corregido
