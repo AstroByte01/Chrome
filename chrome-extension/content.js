@@ -105,8 +105,19 @@ class EbayStockChecker {
         console.log('Campo de cantidad encontrado, iniciando verificación...');
         this.startStockCheck();
       } else {
-        console.log('Campo de cantidad NO encontrado');
-        this.updateDisplayText('❌ Campo de cantidad no encontrado');
+        console.log('Campo de cantidad NO encontrado, intentando búsqueda alternativa...');
+        this.updateDisplayText('⚠️ Buscando campo de cantidad...');
+        
+        // Intentar una búsqueda más agresiva después de un delay
+        setTimeout(() => {
+          this.findRequiredElements();
+          if (this.quantityInput) {
+            console.log('Campo encontrado en segundo intento');
+            this.startStockCheck();
+          } else {
+            this.updateDisplayText('❌ No se pudo encontrar campo de cantidad');
+          }
+        }, 2000);
       }
     } else {
       console.log('No se encontró el elemento "More than 10 available"');
