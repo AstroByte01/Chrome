@@ -381,30 +381,34 @@ class EbayStockChecker {
 
     // Guardar valor original
     const originalValue = this.quantityInput.value;
-    this.debugLog(`🔄 Iniciando verificación simple de 1 en 1, valor original: ${originalValue}`);
+    this.debugLog(`🔄 Iniciando verificación LENTA de 1 en 1, valor original: ${originalValue}`);
 
     let currentQuantity = 11; // Empezar desde 11 (ya sabemos que hay más de 10)
     let maxQuantity = 0;
-    const maxAttempts = 10000; // Límite alto para productos con mucho stock
+    const maxAttempts = 5000; // Límite razonable
     
-    this.debugLog('🎯 Usando lógica simple: incrementar de 1 en 1 hasta error');
+    this.debugLog('🎯 Usando lógica simple: incrementar de 1 en 1 hasta error (LENTO para evitar bloqueo)');
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      // Verificar si la página cambió/se redirigió
+      if (!document.body || !this.quantityInput || !document.contains(this.quantityInput)) {
+        this.debugLog('❌ PÁGINA CAMBIÓ - Deteniendo verificación');
+        break;
+      }
+
       try {
         this.debugLog(`📊 Probando cantidad: ${currentQuantity}`);
         
-        // Establecer valor
+        // Establecer valor de forma más suave
         this.quantityInput.value = currentQuantity;
-        this.quantityInput.focus();
         
-        // Disparar todos los eventos posibles
+        // Solo disparar los eventos esenciales
         this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        await this.sleep(100); // Pausa entre eventos
         this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('blur', { bubbles: true }));
         
-        // Esperar a que eBay procese
-        await this.sleep(500); // Tiempo suficiente para que aparezca el error
+        // Esperar MÁS tiempo para que eBay procese sin sobrecarga
+        await this.sleep(1000); // 1 segundo entre cada intento para no saturar
         
         // Verificar si hay error
         const hasError = this.checkForError();
@@ -412,29 +416,57 @@ class EbayStockChecker {
         if (hasError) {
           maxQuantity = currentQuantity - 1; // El anterior es el máximo
           this.debugLog(`🎉 ¡ERROR DETECTADO en ${currentQuantity}! Stock real: ${maxQuantity}`);
+          
+          // RESTAURAR INMEDIATAMENTE para evitar problemas
+          this.quantityInput.value = originalValue;
+          this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+          this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+          
           break;
         } else {
           this.debugLog(`✅ Sin error en ${currentQuantity}, continuando...`);
         }
         
-        // Actualizar display cada 10 intentos para no saturar
-        if (attempt % 10 === 0) {
-          this.updateDisplayText(`🔄 Verificando... ${currentQuantity}`);
+        // Actualizar display cada 5 intentos
+        if (attempt % 5 === 0) {
+          this.updateDisplayText(`🔄 Verificando... ${currentQuantity} (${attempt}/${maxAttempts})`);
         }
         
         // Incrementar de 1 en 1
         currentQuantity++;
         
+        // Pausa adicional cada 10 intentos para dar respiro
+        if (attempt % 10 === 0) {
+          this.debugLog(`⏸️ Pausa de seguridad después de ${attempt} intentos`);
+          await this.sleep(2000); // 2 segundos cada 10 intentos
+        }
+        
       } catch (error) {
         this.debugLog(`❌ Error en intento ${attempt}: ${error.message}`);
+        
+        // Restaurar valor si hay error
+        try {
+          this.quantityInput.value = originalValue;
+          this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        } catch (restoreError) {
+          this.debugLog(`❌ Error restaurando valor: ${restoreError.message}`);
+        }
+        
         break;
       }
     }
 
-    // Restaurar valor original
-    this.quantityInput.value = originalValue;
-    this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-    this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+    // Asegurar restauración final
+    try {
+      if (this.quantityInput && document.contains(this.quantityInput)) {
+        this.quantityInput.value = originalValue;
+        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this.debugLog(`🔄 Valor restaurado a: ${originalValue}`);
+      }
+    } catch (finalRestoreError) {
+      this.debugLog(`❌ Error en restauración final: ${finalRestoreError.message}`);
+    }
 
     this.debugLog(`🎉 RESULTADO FINAL: Stock real encontrado = ${maxQuantity}`);
     return maxQuantity;
