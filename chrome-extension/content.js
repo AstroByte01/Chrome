@@ -488,52 +488,8 @@ class EbayStockChecker {
     return maxQuantity;
   }
 
-  async incrementalSearch(originalValue) {
-    let currentQuantity = 11;
-    let maxQuantity = 0;
-    const maxAttempts = 500;
-    
-    this.debugLog('🔄 Iniciando búsqueda incremental...');
-    
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        this.quantityInput.value = currentQuantity;
-        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('keyup', { bubbles: true }));
-        
-        await this.sleep(200);
-
-        if (this.checkForError()) {
-          maxQuantity = currentQuantity - 1;
-          this.debugLog(`🎯 Límite encontrado en: ${maxQuantity}`);
-          break;
-        }
-
-        this.updateDisplayText(`🔄 Verificando... ${currentQuantity}`);
-        
-        // Incrementar inteligentemente
-        if (currentQuantity < 100) {
-          currentQuantity += 10;
-        } else if (currentQuantity < 500) {
-          currentQuantity += 25;
-        } else {
-          currentQuantity += 50;
-        }
-
-      } catch (error) {
-        this.debugLog(`❌ Error en búsqueda incremental: ${error.message}`);
-        break;
-      }
-    }
-
-    // Restaurar valor original
-    this.quantityInput.value = originalValue;
-    this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-    this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-
-    this.debugLog(`📊 Búsqueda incremental completada: ${maxQuantity}`);
-    return maxQuantity;
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   checkForError() {
