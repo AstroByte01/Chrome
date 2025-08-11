@@ -415,15 +415,14 @@ class EbayStockChecker {
 
     // Guardar valor original
     const originalValue = this.quantityInput.value;
-    this.debugLog(`🔄 Iniciando verificación LENTA de 1 en 1, valor original: ${originalValue}`);
+    this.debugLog(`🔄 Iniciando verificación MANUAL de 1 en 1, valor original: ${originalValue}`);
 
-    let currentQuantity = 11; // Empezar desde 11 (ya sabemos que hay más de 10)
-    let maxQuantity = 0;
-    const maxAttempts = 5000; // Límite razonable
+    // NUEVA ESTRATEGIA: Probar con números específicos que tú conoces
+    const testNumbers = [11, 50, 100, 500, 1000, 2000, 3000, 3400, 3401, 3402, 3500, 4000, 5000];
     
-    this.debugLog('🎯 Usando lógica simple: incrementar de 1 en 1 hasta error (LENTO para evitar bloqueo)');
+    this.debugLog(`🎯 MODO DEBUG: Probando números específicos: ${testNumbers.join(', ')}`);
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let testNumber of testNumbers) {
       // Verificar si la página cambió/se redirigió
       if (!document.body || !this.quantityInput || !document.contains(this.quantityInput)) {
         this.debugLog('❌ PÁGINA CAMBIÓ - Deteniendo verificación');
@@ -431,52 +430,50 @@ class EbayStockChecker {
       }
 
       try {
-        this.debugLog(`📊 Probando cantidad: ${currentQuantity}`);
+        this.debugLog(`📊 === PROBANDO NÚMERO: ${testNumber} ===`);
         
-        // Establecer valor de forma más suave
-        this.quantityInput.value = currentQuantity;
+        // Capturar estado ANTES
+        const beforeHTML = this.captureAreaAroundQuantity();
         
-        // Solo disparar los eventos esenciales
+        // Establecer valor
+        this.quantityInput.value = testNumber;
         this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        await this.sleep(100); // Pausa entre eventos
+        await this.sleep(100);
         this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
         
-        // Esperar MÁS tiempo para que eBay procese sin sobrecarga
-        await this.sleep(1000); // 1 segundo entre cada intento para no saturar
+        // Esperar procesamiento
+        await this.sleep(2000); // 2 segundos para estar seguro
         
-        // Verificar si hay error
+        // Capturar estado DESPUÉS
+        const afterHTML = this.captureAreaAroundQuantity();
+        
+        // Comparar cambios
+        if (beforeHTML !== afterHTML) {
+          this.debugLog(`🔄 CAMBIO DETECTADO en ${testNumber}:`);
+          this.debugLog(`ANTES: ${beforeHTML.substring(0, 200)}...`);
+          this.debugLog(`DESPUÉS: ${afterHTML.substring(0, 200)}...`);
+        }
+        
+        // Verificar error
         const hasError = this.checkForError();
         
         if (hasError) {
-          maxQuantity = currentQuantity - 1; // El anterior es el máximo
-          this.debugLog(`🎉 ¡ERROR DETECTADO en ${currentQuantity}! Stock real: ${maxQuantity}`);
+          this.debugLog(`🎉 ¡ERROR DETECTADO en ${testNumber}! Stock real debe ser menor`);
           
-          // RESTAURAR INMEDIATAMENTE para evitar problemas
+          // Restaurar inmediatamente
           this.quantityInput.value = originalValue;
           this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
           this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
           
-          break;
+          return testNumber - 1;
         } else {
-          this.debugLog(`✅ Sin error en ${currentQuantity}, continuando...`);
+          this.debugLog(`✅ Sin error en ${testNumber}`);
         }
         
-        // Actualizar display cada 5 intentos
-        if (attempt % 5 === 0) {
-          this.updateDisplayText(`🔄 Verificando... ${currentQuantity} (${attempt}/${maxAttempts})`);
-        }
-        
-        // Incrementar de 1 en 1
-        currentQuantity++;
-        
-        // Pausa adicional cada 10 intentos para dar respiro
-        if (attempt % 10 === 0) {
-          this.debugLog(`⏸️ Pausa de seguridad después de ${attempt} intentos`);
-          await this.sleep(2000); // 2 segundos cada 10 intentos
-        }
+        this.updateDisplayText(`🔄 Probando... ${testNumber}`);
         
       } catch (error) {
-        this.debugLog(`❌ Error en intento ${attempt}: ${error.message}`);
+        this.debugLog(`❌ Error probando ${testNumber}: ${error.message}`);
         
         // Restaurar valor si hay error
         try {
@@ -490,7 +487,7 @@ class EbayStockChecker {
       }
     }
 
-    // Asegurar restauración final
+    // Restaurar valor final
     try {
       if (this.quantityInput && document.contains(this.quantityInput)) {
         this.quantityInput.value = originalValue;
@@ -502,8 +499,23 @@ class EbayStockChecker {
       this.debugLog(`❌ Error en restauración final: ${finalRestoreError.message}`);
     }
 
-    this.debugLog(`🎉 RESULTADO FINAL: Stock real encontrado = ${maxQuantity}`);
-    return maxQuantity;
+    this.debugLog(`⚠️ No se detectó límite en números de prueba`);
+    return 0;
+  }
+
+  captureAreaAroundQuantity() {
+    try {
+      // Capturar el contenedor padre del campo de cantidad
+      let container = this.quantityInput.parentElement;
+      if (container && container.parentElement) {
+        container = container.parentElement; // Subir un nivel más
+      }
+      
+      const html = container ? container.innerHTML : 'No container found';
+      return html;
+    } catch (error) {
+      return `Error capturing HTML: ${error.message}`;
+    }
   }
 
   sleep(ms) {
