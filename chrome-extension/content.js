@@ -130,17 +130,25 @@ class EbayStockChecker {
         await this.sleep(200);
 
         // Verificar si hay mensaje de error
-        const errorMessages = document.querySelectorAll('.ux-textspans, .error, .ebay-notice-content');
+        const errorMessages = document.querySelectorAll('.ux-textspans, .error, .ebay-notice-content, .textbox__error-msg, #qtyErrMsg');
         let hasError = false;
 
         for (let errorEl of errorMessages) {
           const errorText = errorEl.textContent.toLowerCase();
           if (errorText.includes('please enter a quantity of 1 or more') ||
+              errorText.includes('ingresa una cantidad de 1 o más') ||
               errorText.includes('quantity must be') ||
+              errorText.includes('la cantidad debe ser') ||
               errorText.includes('exceeded') ||
+              errorText.includes('superado') ||
               errorText.includes('maximum quantity') ||
-              errorText.includes('available quantity')) {
+              errorText.includes('cantidad máxima') ||
+              errorText.includes('available quantity') ||
+              errorText.includes('cantidad disponible') ||
+              errorText.includes('inventory limit') ||
+              errorText.includes('límite de inventario')) {
             hasError = true;
+            console.log('Error detectado:', errorText);
             break;
           }
         }
