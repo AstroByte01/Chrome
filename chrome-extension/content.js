@@ -56,28 +56,40 @@ class EbayStockChecker {
         </div>
       </div>
       <div id="debug-content" style="max-height: 200px; overflow-y: auto;">Iniciando...</div>
-      <button id="force-check" style="
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-        width: 100%;
-        font-size: 12px;
-      ">🔄 Forzar Verificación</button>
-      <button id="clear-log" style="
-        background: #ff9ff3;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 5px;
-        width: 100%;
-        font-size: 11px;
-      ">🗑️ Limpiar Log</button>
+      <div style="margin-top: 10px;">
+        <button id="force-check" style="
+          background: #667eea;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          width: 100%;
+          font-size: 12px;
+          margin-bottom: 5px;
+        ">🔄 Forzar Verificación</button>
+        <button id="stop-check" style="
+          background: #ff4757;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          width: 100%;
+          font-size: 12px;
+          margin-bottom: 5px;
+        ">🛑 PARAR Verificación</button>
+        <button id="clear-log" style="
+          background: #ff9ff3;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          width: 100%;
+          font-size: 11px;
+        ">🗑️ Limpiar Log</button>
+      </div>
     `;
     
     document.body.appendChild(this.debugPanel);
@@ -85,9 +97,20 @@ class EbayStockChecker {
     // Event listeners
     const forceBtn = this.debugPanel.querySelector('#force-check');
     forceBtn.addEventListener('click', () => {
+      if (!this.isChecking) {
+        this.isChecking = false;
+        this.debugLog('🔄 Verificación forzada por usuario');
+        this.findAndReplaceStock();
+      } else {
+        this.debugLog('⚠️ Ya hay una verificación en curso');
+      }
+    });
+    
+    const stopBtn = this.debugPanel.querySelector('#stop-check');
+    stopBtn.addEventListener('click', () => {
+      this.debugLog('🛑 VERIFICACIÓN DETENIDA POR USUARIO');
       this.isChecking = false;
-      this.debugLog('🔄 Verificación forzada por usuario');
-      this.findAndReplaceStock();
+      this.updateDisplayText('🛑 Verificación detenida por usuario');
     });
     
     const closeBtn = this.debugPanel.querySelector('#close-debug');
