@@ -17,7 +17,7 @@ class EbayStockChecker {
       position: fixed;
       top: 10px;
       right: 10px;
-      width: 300px;
+      width: 320px;
       background: white;
       border: 2px solid #667eea;
       border-radius: 8px;
@@ -28,11 +28,34 @@ class EbayStockChecker {
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       max-height: 400px;
       overflow-y: auto;
+      transition: all 0.3s ease;
     `;
     
     this.debugPanel.innerHTML = `
-      <h3 style="margin: 0 0 10px 0; color: #667eea;">🔍 eBay Stock Checker Debug</h3>
-      <div id="debug-content">Iniciando...</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin: 0; color: #667eea; font-size: 14px;">🔍 eBay Stock Debug</h3>
+        <div>
+          <button id="minimize-debug" style="
+            background: #f0f0f0;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 10px;
+          ">_</button>
+          <button id="close-debug" style="
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+          ">×</button>
+        </div>
+      </div>
+      <div id="debug-content" style="max-height: 200px; overflow-y: auto;">Iniciando...</div>
       <button id="force-check" style="
         background: #667eea;
         color: white;
@@ -42,17 +65,55 @@ class EbayStockChecker {
         cursor: pointer;
         margin-top: 10px;
         width: 100%;
-      ">Forzar Verificación</button>
+        font-size: 12px;
+      ">🔄 Forzar Verificación</button>
+      <button id="clear-log" style="
+        background: #ff9ff3;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 5px;
+        width: 100%;
+        font-size: 11px;
+      ">🗑️ Limpiar Log</button>
     `;
     
     document.body.appendChild(this.debugPanel);
     
-    // Agregar event listener al botón
+    // Event listeners
     const forceBtn = this.debugPanel.querySelector('#force-check');
     forceBtn.addEventListener('click', () => {
       this.isChecking = false;
       this.debugLog('🔄 Verificación forzada por usuario');
       this.findAndReplaceStock();
+    });
+    
+    const closeBtn = this.debugPanel.querySelector('#close-debug');
+    closeBtn.addEventListener('click', () => {
+      this.debugPanel.style.display = 'none';
+    });
+    
+    const minimizeBtn = this.debugPanel.querySelector('#minimize-debug');
+    minimizeBtn.addEventListener('click', () => {
+      const content = this.debugPanel.querySelector('#debug-content');
+      const buttons = this.debugPanel.querySelectorAll('button');
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        buttons.forEach(btn => { if (btn.id !== 'minimize-debug' && btn.id !== 'close-debug') btn.style.display = 'block'; });
+        minimizeBtn.textContent = '_';
+      } else {
+        content.style.display = 'none';
+        buttons.forEach(btn => { if (btn.id !== 'minimize-debug' && btn.id !== 'close-debug') btn.style.display = 'none'; });
+        minimizeBtn.textContent = '+';
+      }
+    });
+    
+    const clearBtn = this.debugPanel.querySelector('#clear-log');
+    clearBtn.addEventListener('click', () => {
+      const content = this.debugPanel.querySelector('#debug-content');
+      content.innerHTML = 'Log limpiado...';
     });
   }
 
