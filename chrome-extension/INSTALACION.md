@@ -3,6 +3,19 @@
 ## ✅ PROBLEMA RESUELTO
 Los iconos han sido creados automáticamente. La extensión está completa y lista para instalar.
 
+## ✅ ERRORES CORREGIDOS EN v1.0.1
+
+### 🔧 Selector inválido corregido
+- ❌ **Error anterior**: `button:contains("Buy It Now")` causaba SyntaxError
+- ✅ **Solución**: Búsqueda manual por texto en botones y enlaces
+- ✅ **Resultado**: Sin errores de consola, detección más robusta
+
+### 🛠️ Mejoras adicionales
+- ✅ Panel de debug mejorado con controles (minimizar, cerrar, limpiar)
+- ✅ Manejo de errores más robusto en todos los selectores
+- ✅ Mejor logging y diagnóstico en tiempo real
+- ✅ Búsqueda de elementos más exhaustiva
+
 ## 📂 Archivos incluidos
 ```
 chrome-extension/
