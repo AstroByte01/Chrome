@@ -415,106 +415,192 @@ class EbayStockChecker {
 
     // Guardar valor original
     const originalValue = this.quantityInput.value;
-    this.debugLog(`🔄 Iniciando verificación MANUAL de 1 en 1, valor original: ${originalValue}`);
+    this.debugLog(`🚀 NUEVA ESTRATEGIA: Búsqueda exponencial + binaria (valor original: ${originalValue})`);
 
-    // NUEVA ESTRATEGIA: Probar con números específicos que tú conoces
-    const testNumbers = [11, 50, 100, 500, 1000, 2000, 3000, 3400, 3401, 3402, 3500, 4000, 5000];
-    
-    this.debugLog(`🎯 MODO DEBUG: Probando números específicos: ${testNumbers.join(', ')}`);
-
-    for (let testNumber of testNumbers) {
-      // Verificar si la página cambió/se redirigió
-      if (!document.body || !this.quantityInput || !document.contains(this.quantityInput)) {
-        this.debugLog('❌ PÁGINA CAMBIÓ - Deteniendo verificación');
-        break;
+    try {
+      // PASO 1: Intentar leer stock directamente del HTML
+      const directStock = await this.tryDirectStockReading();
+      if (directStock > 0) {
+        this.debugLog(`🎉 Stock encontrado directamente en HTML: ${directStock}`);
+        return directStock;
       }
 
+      // PASO 2: Búsqueda exponencial + binaria
+      const binaryStock = await this.exponentialBinarySearch(originalValue);
+      return binaryStock;
+
+    } catch (error) {
+      this.debugLog(`❌ Error en findRealStock: ${error.message}`);
+      return 0;
+    } finally {
+      // Siempre restaurar valor original
       try {
-        this.debugLog(`📊 === PROBANDO NÚMERO: ${testNumber} ===`);
-        
-        // Capturar estado ANTES
-        const beforeHTML = this.captureAreaAroundQuantity();
-        
-        // Establecer valor
-        this.quantityInput.value = testNumber;
-        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        await this.sleep(100);
-        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        // Esperar procesamiento
-        await this.sleep(2000); // 2 segundos para estar seguro
-        
-        // Capturar estado DESPUÉS
-        const afterHTML = this.captureAreaAroundQuantity();
-        
-        // Comparar cambios
-        if (beforeHTML !== afterHTML) {
-          this.debugLog(`🔄 CAMBIO DETECTADO en ${testNumber}:`);
-          this.debugLog(`ANTES: ${beforeHTML.substring(0, 200)}...`);
-          this.debugLog(`DESPUÉS: ${afterHTML.substring(0, 200)}...`);
-        }
-        
-        // Verificar error
-        const hasError = this.checkForError();
-        
-        if (hasError) {
-          this.debugLog(`🎉 ¡ERROR DETECTADO en ${testNumber}! Stock real debe ser menor`);
-          
-          // Restaurar inmediatamente
+        if (this.quantityInput && document.contains(this.quantityInput)) {
           this.quantityInput.value = originalValue;
           this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
           this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-          
-          return testNumber - 1;
-        } else {
-          this.debugLog(`✅ Sin error en ${testNumber}`);
+          this.debugLog(`🔄 Valor restaurado a: ${originalValue}`);
         }
-        
-        this.updateDisplayText(`🔄 Probando... ${testNumber}`);
-        
-      } catch (error) {
-        this.debugLog(`❌ Error probando ${testNumber}: ${error.message}`);
-        
-        // Restaurar valor si hay error
-        try {
-          this.quantityInput.value = originalValue;
-          this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        } catch (restoreError) {
-          this.debugLog(`❌ Error restaurando valor: ${restoreError.message}`);
+      } catch (restoreError) {
+        this.debugLog(`❌ Error restaurando: ${restoreError.message}`);
+      }
+    }
+  }
+
+  async tryDirectStockReading() {
+    this.debugLog('🔍 PASO 1: Intentando leer stock directamente del HTML...');
+    
+    try {
+      // Buscar atributos de stock en el campo de cantidad
+      const possibleAttributes = [
+        'data-stock', 'data-inventory', 'data-quantity', 'data-available', 
+        'data-max-quantity', 'data-max', 'max', 'data-limit'
+      ];
+
+      for (let attr of possibleAttributes) {
+        const value = this.quantityInput.getAttribute(attr);
+        if (value && !isNaN(value) && parseInt(value) > 10) {
+          this.debugLog(`✅ Stock encontrado en atributo ${attr}: ${value}`);
+          return parseInt(value);
         }
-        
+      }
+
+      // Buscar en elementos padre
+      let parent = this.quantityInput.parentElement;
+      for (let i = 0; i < 3 && parent; i++) {
+        for (let attr of possibleAttributes) {
+          const value = parent.getAttribute(attr);
+          if (value && !isNaN(value) && parseInt(value) > 10) {
+            this.debugLog(`✅ Stock encontrado en elemento padre ${attr}: ${value}`);
+            return parseInt(value);
+          }
+        }
+        parent = parent.parentElement;
+      }
+
+      // Buscar en script tags o JSON embebido
+      const scripts = document.querySelectorAll('script[type="application/json"], script:not([src])');
+      for (let script of scripts) {
+        const content = script.textContent || script.innerHTML;
+        if (content.includes('inventory') || content.includes('stock') || content.includes('quantity')) {
+          try {
+            const matches = content.match(/"(?:inventory|stock|quantity|available)":\s*(\d+)/gi);
+            if (matches) {
+              for (let match of matches) {
+                const num = parseInt(match.match(/\d+/)[0]);
+                if (num > 10 && num < 100000) { // Rango razonable
+                  this.debugLog(`✅ Stock encontrado en script JSON: ${num}`);
+                  return num;
+                }
+              }
+            }
+          } catch (jsonError) {
+            // Continuar buscando
+          }
+        }
+      }
+
+      this.debugLog('❌ No se pudo leer stock directamente');
+      return 0;
+
+    } catch (error) {
+      this.debugLog(`❌ Error en lectura directa: ${error.message}`);
+      return 0;
+    }
+  }
+
+  async exponentialBinarySearch(originalValue) {
+    this.debugLog('🎯 PASO 2: Iniciando búsqueda exponencial + binaria...');
+
+    // FASE 1: Búsqueda exponencial para encontrar límite superior
+    this.debugLog('📈 FASE EXPONENCIAL: Buscando límite superior...');
+    
+    let exponentialValues = [];
+    let lastValidValue = 10; // Sabemos que 10 funciona
+    let firstInvalidValue = null;
+
+    // Generar secuencia exponencial: 11, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120...
+    for (let i = 1; i <= 15; i++) { // Máximo 15 iteraciones (hasta ~327,680)
+      const testValue = Math.floor(10 + Math.pow(2, i) * 5); // Empezar en 20, luego 40, 80...
+      exponentialValues.push(testValue);
+      
+      if (!await this.testQuantity(testValue)) {
+        lastValidValue = exponentialValues[i - 2] || 10; // El anterior válido
+        firstInvalidValue = testValue;
+        this.debugLog(`🎯 Límite encontrado: válido=${lastValidValue}, inválido=${firstInvalidValue}`);
         break;
       }
     }
 
-    // Restaurar valor final
-    try {
-      if (this.quantityInput && document.contains(this.quantityInput)) {
-        this.quantityInput.value = originalValue;
-        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
-        this.debugLog(`🔄 Valor restaurado a: ${originalValue}`);
-      }
-    } catch (finalRestoreError) {
-      this.debugLog(`❌ Error en restauración final: ${finalRestoreError.message}`);
+    if (!firstInvalidValue) {
+      this.debugLog('⚠️ No se encontró límite en fase exponencial');
+      return 0;
     }
 
-    this.debugLog(`⚠️ No se detectó límite en números de prueba`);
-    return 0;
+    // FASE 2: Búsqueda binaria entre lastValidValue y firstInvalidValue
+    this.debugLog(`🔍 FASE BINARIA: Buscando entre ${lastValidValue} y ${firstInvalidValue}`);
+    
+    let low = lastValidValue;
+    let high = firstInvalidValue;
+    let maxIterations = Math.ceil(Math.log2(high - low)) + 1;
+    
+    this.debugLog(`📊 Búsqueda binaria: rango inicial [${low}, ${high}], máx iteraciones: ${maxIterations}`);
+
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      if (low >= high - 1) break;
+
+      const mid = Math.floor((low + high) / 2);
+      this.debugLog(`🔍 Binaria iteración ${iteration + 1}: probando ${mid} (rango: ${low}-${high})`);
+
+      if (await this.testQuantity(mid)) {
+        low = mid;
+        this.debugLog(`✅ ${mid} válido, nuevo low: ${low}`);
+      } else {
+        high = mid;
+        this.debugLog(`❌ ${mid} inválido, nuevo high: ${high}`);
+      }
+
+      this.updateDisplayText(`🔍 Búsqueda binaria... ${mid} [${low}-${high}] (${iteration + 1}/${maxIterations})`);
+    }
+
+    const finalResult = low;
+    this.debugLog(`🎉 RESULTADO FINAL: Stock real = ${finalResult}`);
+    return finalResult;
   }
 
-  captureAreaAroundQuantity() {
+  async testQuantity(quantity) {
     try {
-      // Capturar el contenedor padre del campo de cantidad
-      let container = this.quantityInput.parentElement;
-      if (container && container.parentElement) {
-        container = container.parentElement; // Subir un nivel más
+      // Verificar que la página sigue válida
+      if (!document.body || !this.quantityInput || !document.contains(this.quantityInput)) {
+        this.debugLog('❌ Página cambió durante prueba');
+        return false;
       }
+
+      this.debugLog(`🧪 Probando cantidad: ${quantity}`);
+
+      // Establecer valor
+      this.quantityInput.value = quantity;
+      this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      await this.sleep(200);
+      this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Esperar procesamiento con timeout
+      await this.sleep(800); // 800ms debería ser suficiente
+
+      // Verificar error
+      const hasError = this.checkForError();
       
-      const html = container ? container.innerHTML : 'No container found';
-      return html;
+      if (hasError) {
+        this.debugLog(`🚨 ERROR detectado en ${quantity}`);
+        return false;
+      } else {
+        this.debugLog(`✅ ${quantity} es válido`);
+        return true;
+      }
+
     } catch (error) {
-      return `Error capturing HTML: ${error.message}`;
+      this.debugLog(`❌ Error probando ${quantity}: ${error.message}`);
+      return false;
     }
   }
 
