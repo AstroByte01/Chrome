@@ -1,4 +1,4 @@
-// eBay Stock Checker Content Script
+// eBay Stock Checker Content Script - VERSIÓN NO INVASIVA
 class EbayStockChecker {
   constructor() {
     this.isChecking = false;
@@ -7,6 +7,8 @@ class EbayStockChecker {
     this.quantityInput = null;
     this.addToCartBtn = null;
     this.debugPanel = null;
+    this.isActive = false;
+    this.observer = null;
     this.init();
   }
 
