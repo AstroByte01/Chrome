@@ -937,26 +937,19 @@ class EbayStockChecker {
         return false;
       }
 
-      this.debugLog(`🧪 PRUEBA ULTRA SIMPLE: ${quantity}`);
+      this.debugLog(`🧪 PRUEBA MEJORADA: ${quantity}`);
 
-      // Establecer valor de forma muy simple
-      this.quantityInput.value = quantity;
-      this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      // Usar simulación de escritura más realista (basado en script del usuario)
+      await this.setQuantityWithRealisticInput(quantity);
       
-      // Esperar tiempo generoso para que eBay procese
-      await this.sleep(4000); // 4 segundos completos
+      // Esperar tiempo para que eBay procese
+      await this.sleep(FAST_MODE ? 200 : 1000);
       
-      // Verificar error de forma ULTRA SIMPLE
-      const errorElement = document.querySelector('#qtyErrMsg > span');
-      if (errorElement && errorElement.textContent.includes('Please enter a lower number')) {
-        this.debugLog(`🚨 ERROR ENCONTRADO: "${errorElement.textContent}"`);
-        return false;
-      }
-
-      // Verificar en toda la página como backup
-      const pageText = document.body.textContent || '';
-      if (pageText.includes('Please enter a lower number')) {
-        this.debugLog('🚨 ERROR ENCONTRADO en página');
+      // Usar detección de errores mejorada
+      const hasError = this.checkForErrorImproved();
+      
+      if (hasError) {
+        this.debugLog(`🚨 ERROR DETECTADO con cantidad ${quantity}`);
         return false;
       }
 
@@ -967,6 +960,115 @@ class EbayStockChecker {
       this.debugLog(`❌ Error probando ${quantity}: ${error.message}`);
       return false;
     }
+  }
+
+  async setQuantityWithRealisticInput(value) {
+    // Simulación de escritura más realista basada en el script del usuario
+    const input = this.quantityInput;
+    
+    // Enfocar y limpiar
+    input.focus();
+    input.value = '';
+    await this.sleep(FAST_MODE ? 10 : 50);
+    
+    // Escribir carácter por carácter con eventos realistas
+    const strValue = String(value);
+    for (const char of strValue) {
+      const keyCode = char.charCodeAt(0);
+      
+      // Agregar carácter
+      input.value += char;
+      
+      // Disparar eventos de teclado realistas
+      input.dispatchEvent(new KeyboardEvent('keydown', { 
+        bubbles: true, cancelable: true, key: char, keyCode 
+      }));
+      input.dispatchEvent(new KeyboardEvent('keypress', { 
+        bubbles: true, cancelable: true, key: char, keyCode 
+      }));
+      input.dispatchEvent(new InputEvent('input', { 
+        bubbles: true, cancelable: true, data: char 
+      }));
+      input.dispatchEvent(new KeyboardEvent('keyup', { 
+        bubbles: true, cancelable: true, key: char, keyCode 
+      }));
+      
+      await this.sleep(FAST_MODE ? 5 : 20);
+    }
+    
+    // Eventos de finalización
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.blur();
+    await this.sleep(FAST_MODE ? 50 : 150);
+  }
+
+  checkForErrorImproved() {
+    // Detección de errores mejorada basada en el script del usuario
+    const errorSelectors = [
+      '#qtyErrMsg',
+      '.textbox__error-msg', 
+      '[class*="error"]',
+      '[class*="notice"]',
+      '[class*="alert"]',
+      '[aria-invalid="true"]',
+      '[data-error]',
+      '[role="alert"]'
+    ];
+    
+    const errorElements = document.querySelectorAll(errorSelectors.join(', '));
+    
+    // Verificar texto de error en elementos encontrados
+    const hasTextError = Array.from(errorElements).some(el => {
+      const text = (el.textContent || '').trim().toLowerCase();
+      return /please enter a lower number|not available|maximum quantity|exceeds stock|no hay stock|agotado/.test(text);
+    });
+    
+    // Verificar estado del input
+    const inputDisabled = this.quantityInput.disabled || this.quantityInput.classList.contains('error');
+    
+    return hasTextError || inputDisabled;
+  }
+
+  async waitForDOMChange(timeout = 300) {
+    // Función para esperar cambios en el DOM
+    return new Promise(resolve => {
+      const observer = new MutationObserver(() => {
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(document.body, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true 
+      });
+      setTimeout(() => {
+        observer.disconnect();
+        resolve();
+      }, timeout);
+    });
+  }
+
+  createHideProblematicElementsCSS() {
+    // Ocultar elementos problemáticos durante verificación (basado en script del usuario)
+    const style = document.createElement('style');
+    style.id = 'ebay-stock-checker-hide-elements';
+    style.textContent = `
+      .ebay-stock-checker-active #qtyTextBox {
+        opacity: 0.3 !important;
+        pointer-events: none !important;
+      }
+      .ebay-stock-checker-active #qtyErrMsg,
+      .ebay-stock-checker-active .textbox__error-msg,
+      .ebay-stock-checker-active [class*="error"]:not(.ebay-stock-checker-panel),
+      .ebay-stock-checker-active [class*="notice"]:not(.ebay-stock-checker-panel),
+      .ebay-stock-checker-active [class*="alert"]:not(.ebay-stock-checker-panel),
+      .ebay-stock-checker-active [role="alert"]:not(.ebay-stock-checker-panel) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+    `;
+    return style;
   }
 
   sleep(ms) {
