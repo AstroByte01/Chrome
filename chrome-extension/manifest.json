@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "eBay Stock Checker",
-  "version": "1.3.0",
-  "description": "Muestra la cantidad real disponible en productos de eBay",
+  "version": "1.4.0",
+  "description": "Verifica la cantidad real disponible en productos de eBay (modo no invasivo)",
   "permissions": [
     "activeTab",
     "scripting"
