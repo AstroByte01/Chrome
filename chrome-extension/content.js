@@ -1,4 +1,4 @@
-// eBay Stock Checker Content Script - VERSIÓN NO INVASIVA
+// eBay Stock Checker Content Script - VERSIÓN NO INVASIVA MEJORADA
 class EbayStockChecker {
   constructor() {
     this.isChecking = false;
@@ -9,6 +9,8 @@ class EbayStockChecker {
     this.debugPanel = null;
     this.isActive = false;
     this.observer = null;
+    this.FAST_MODE = true; // Modo rápido basado en script del usuario
+    this.hideElementsStyle = null;
     this.init();
   }
 
