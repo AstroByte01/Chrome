@@ -453,11 +453,14 @@ class EbayStockChecker {
   }
 
   async startStockCheck() {
-    if (this.isChecking) return;
+    if (this.isChecking || !this.isActive) {
+      this.debugLog('⚠️ Verificación ya en curso o extension inactivo');
+      return;
+    }
     
     this.isChecking = true;
     this.updateDisplayText('🔄 Verificando stock real... (puede tomar tiempo)');
-    this.debugLog('🚀 Iniciando verificación de stock LENTA para evitar bloqueo...');
+    this.debugLog('🚀 Iniciando verificación de stock CONTROLADA...');
 
     // Guardar URL inicial para detectar redirecciones
     const initialUrl = window.location.href;
@@ -483,6 +486,12 @@ class EbayStockChecker {
     } catch (error) {
       this.debugLog(`❌ Error al verificar stock: ${error.message}`);
       this.updateDisplayText('Error al verificar stock ❌');
+      
+      // Si hay error, posiblemente eBay nos está bloqueando
+      if (error.message.includes('blocked') || error.message.includes('redirect')) {
+        this.debugLog('🚨 POSIBLE BLOQUEO DE EBAY - Deteniendo verificación');
+        this.stopVerification();
+      }
     } finally {
       this.isChecking = false;
     }
