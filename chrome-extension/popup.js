@@ -1,4 +1,4 @@
-// Popup JavaScript
+// Popup JavaScript - VERSIÓN NO INVASIVA
 document.addEventListener('DOMContentLoaded', function() {
   const statusIndicator = document.getElementById('statusIndicator');
   const statusText = document.getElementById('statusText');
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (isEbayPage) {
       statusIndicator.style.color = '#28a745';
-      statusText.textContent = 'Activo en esta página';
+      statusText.textContent = 'Listo para verificar stock';
       toggleBtn.textContent = 'Verificar Stock Ahora';
     } else {
       statusIndicator.style.color = '#ffc107';
@@ -36,13 +36,24 @@ document.addEventListener('DOMContentLoaded', function() {
           function: forceStockCheck
         });
         
+        // También mostrar panel de debug automáticamente
+        chrome.scripting.executeScript({
+          target: {tabId: currentTab.id},
+          function: showDebugPanel
+        });
+        
         statusText.textContent = 'Verificando stock...';
         statusIndicator.style.color = '#007bff';
         
         setTimeout(() => {
-          statusText.textContent = 'Verificación completada';
+          statusText.textContent = 'Verificación iniciada';
           statusIndicator.style.color = '#28a745';
-        }, 3000);
+        }, 1000);
+        
+        // Cerrar popup después de iniciar
+        setTimeout(() => {
+          window.close();
+        }, 1500);
       }
     });
   });
