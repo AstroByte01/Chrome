@@ -1001,7 +1001,7 @@ class EbayStockChecker {
     // Eventos de finalización
     input.dispatchEvent(new Event('change', { bubbles: true }));
     input.blur();
-    await this.sleep(FAST_MODE ? 50 : 150);
+    await this.sleep(this.FAST_MODE ? 50 : 150);
   }
 
   checkForErrorImproved() {
