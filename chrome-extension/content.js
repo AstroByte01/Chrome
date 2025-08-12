@@ -588,54 +588,53 @@ class EbayStockChecker {
   }
 
   async testQuantityExhaustive(quantity) {
-    // FASE 1: Capturar estado inicial
-    this.debugLog('📸 FASE 1: Capturando estado inicial...');
-    const initialErrorState = this.captureErrorState();
+    // VERSIÓN ULTRA LENTA para evitar sobrecargar la página
+    this.debugLog(`🐌 VERSIÓN ULTRA LENTA: Probando ${quantity} con máximas precauciones`);
     
-    // FASE 2: Establecer valor con múltiples métodos
-    this.debugLog('⚙️ FASE 2: Estableciendo valor...');
-    await this.setQuantityValue(quantity);
+    // PASO 1: Verificar si la página sigue respondiendo
+    if (document.readyState !== 'complete') {
+      this.debugLog('⚠️ Página no está completamente cargada, esperando...');
+      await this.sleep(3000);
+    }
+
+    // PASO 2: Establecer valor de forma ULTRA SUAVE
+    this.debugLog('⚙️ Estableciendo valor de forma ultra suave...');
+    this.quantityInput.value = quantity;
+    await this.sleep(1000); // 1 segundo de pausa
     
-    // FASE 3: Esperar y verificar múltiples veces
-    this.debugLog('⏱️ FASE 3: Esperando y verificando...');
+    this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await this.sleep(2000); // 2 segundos de pausa
     
-    // Verificar inmediatamente
-    if (await this.checkErrorMultipleMethods()) {
-      this.debugLog(`🚨 ERROR DETECTADO INMEDIATAMENTE en ${quantity}`);
+    this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await this.sleep(3000); // 3 segundos para que eBay procese completamente
+
+    // PASO 3: Verificación SIMPLE y DIRECTA
+    this.debugLog('🔍 Verificación simple y directa...');
+    
+    // Método 1: Verificar #qtyErrMsg > span directamente
+    const errorElement = document.querySelector('#qtyErrMsg > span');
+    if (errorElement && errorElement.textContent.includes('Please enter a lower number')) {
+      this.debugLog(`🚨 ERROR DETECTADO DIRECTAMENTE: "${errorElement.textContent}"`);
+      return false; // Error encontrado, cantidad no válida
+    }
+
+    // Método 2: Verificar toda la página para el texto
+    const pageText = document.body.textContent || '';
+    if (pageText.includes('Please enter a lower number')) {
+      this.debugLog('🚨 ERROR DETECTADO en página completa');
       return false;
     }
-    
-    // Esperar 500ms y verificar
-    await this.sleep(500);
-    if (await this.checkErrorMultipleMethods()) {
-      this.debugLog(`🚨 ERROR DETECTADO después de 500ms en ${quantity}`);
-      return false;
+
+    // Método 3: Verificar elementos ux-textspans
+    const textspansElements = document.querySelectorAll('.ux-textspans');
+    for (let element of textspansElements) {
+      if (element.textContent.includes('Please enter a lower number')) {
+        this.debugLog(`🚨 ERROR DETECTADO en ux-textspans: "${element.textContent}"`);
+        return false;
+      }
     }
-    
-    // Esperar otros 500ms (total 1s) y verificar
-    await this.sleep(500);
-    if (await this.checkErrorMultipleMethods()) {
-      this.debugLog(`🚨 ERROR DETECTADO después de 1s en ${quantity}`);
-      return false;
-    }
-    
-    // Esperar otros 1000ms (total 2s) y verificar final
-    await this.sleep(1000);
-    if (await this.checkErrorMultipleMethods()) {
-      this.debugLog(`🚨 ERROR DETECTADO después de 2s en ${quantity}`);
-      return false;
-    }
-    
-    // FASE 4: Capturar estado final y comparar
-    this.debugLog('📸 FASE 4: Comparando estados...');
-    const finalErrorState = this.captureErrorState();
-    
-    if (this.compareErrorStates(initialErrorState, finalErrorState)) {
-      this.debugLog(`🚨 ERROR DETECTADO por cambio de estado en ${quantity}`);
-      return false;
-    }
-    
-    this.debugLog(`✅ ${quantity} es VÁLIDO - No se detectaron errores`);
+
+    this.debugLog(`✅ ${quantity} es VÁLIDO - No hay errores`);
     return true;
   }
 
