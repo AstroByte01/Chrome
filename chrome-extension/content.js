@@ -13,6 +13,9 @@ class EbayStockChecker {
   }
 
   createDebugPanel() {
+    // Solo crear panel si no existe
+    if (this.debugPanel) return;
+    
     // Crear panel de debug visible
     this.debugPanel = document.createElement('div');
     this.debugPanel.style.cssText = `
@@ -57,7 +60,7 @@ class EbayStockChecker {
           ">×</button>
         </div>
       </div>
-      <div id="debug-content" style="max-height: 200px; overflow-y: auto;">Iniciando...</div>
+      <div id="debug-content" style="max-height: 200px; overflow-y: auto;">Extension en modo manual - haz clic en el icono para activar</div>
       <div style="margin-top: 10px;">
         <button id="force-check" style="
           background: #667eea;
@@ -69,7 +72,7 @@ class EbayStockChecker {
           width: 100%;
           font-size: 12px;
           margin-bottom: 5px;
-        ">🔄 Forzar Verificación</button>
+        ">🔄 Iniciar Verificación</button>
         <button id="stop-check" style="
           background: #ff4757;
           color: white;
@@ -100,9 +103,8 @@ class EbayStockChecker {
     const forceBtn = this.debugPanel.querySelector('#force-check');
     forceBtn.addEventListener('click', () => {
       if (!this.isChecking) {
-        this.isChecking = false;
-        this.debugLog('🔄 Verificación forzada por usuario');
-        this.findAndReplaceStock();
+        this.debugLog('🔄 Verificación iniciada manualmente desde debug panel');
+        this.startManualVerification();
       } else {
         this.debugLog('⚠️ Ya hay una verificación en curso');
       }
@@ -111,8 +113,7 @@ class EbayStockChecker {
     const stopBtn = this.debugPanel.querySelector('#stop-check');
     stopBtn.addEventListener('click', () => {
       this.debugLog('🛑 VERIFICACIÓN DETENIDA POR USUARIO');
-      this.isChecking = false;
-      this.updateDisplayText('🛑 Verificación detenida por usuario');
+      this.stopVerification();
     });
     
     const closeBtn = this.debugPanel.querySelector('#close-debug');
