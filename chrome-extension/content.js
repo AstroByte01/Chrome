@@ -448,65 +448,317 @@ class EbayStockChecker {
   }
 
   async tryDirectStockReading() {
-    this.debugLog('🔍 PASO 1: Intentando leer stock directamente del HTML...');
+    this.debugLog('🔍 BÚSQUEDA EXHAUSTIVA DE STOCK DIRECTO...');
     
     try {
-      // Buscar atributos de stock en el campo de cantidad
-      const possibleAttributes = [
-        'data-stock', 'data-inventory', 'data-quantity', 'data-available', 
-        'data-max-quantity', 'data-max', 'max', 'data-limit'
-      ];
-
-      for (let attr of possibleAttributes) {
-        const value = this.quantityInput.getAttribute(attr);
-        if (value && !isNaN(value) && parseInt(value) > 10) {
-          this.debugLog(`✅ Stock encontrado en atributo ${attr}: ${value}`);
-          return parseInt(value);
-        }
+      // MÉTODO 1: Buscar en el campo de cantidad mismo
+      const stockFromQuantityField = this.searchStockInElement(this.quantityInput, 'campo de cantidad');
+      if (stockFromQuantityField > 10) {
+        return stockFromQuantityField;
       }
 
-      // Buscar en elementos padre
+      // MÉTODO 2: Buscar en elementos padre del campo de cantidad
       let parent = this.quantityInput.parentElement;
-      for (let i = 0; i < 3 && parent; i++) {
-        for (let attr of possibleAttributes) {
-          const value = parent.getAttribute(attr);
-          if (value && !isNaN(value) && parseInt(value) > 10) {
-            this.debugLog(`✅ Stock encontrado en elemento padre ${attr}: ${value}`);
-            return parseInt(value);
-          }
+      for (let level = 0; level < 5 && parent; level++) {
+        const stockFromParent = this.searchStockInElement(parent, `elemento padre nivel ${level + 1}`);
+        if (stockFromParent > 10) {
+          return stockFromParent;
         }
         parent = parent.parentElement;
       }
 
-      // Buscar en script tags o JSON embebido
-      const scripts = document.querySelectorAll('script[type="application/json"], script:not([src])');
-      for (let script of scripts) {
-        const content = script.textContent || script.innerHTML;
-        if (content.includes('inventory') || content.includes('stock') || content.includes('quantity')) {
-          try {
-            const matches = content.match(/"(?:inventory|stock|quantity|available)":\s*(\d+)/gi);
-            if (matches) {
-              for (let match of matches) {
-                const num = parseInt(match.match(/\d+/)[0]);
-                if (num > 10 && num < 100000) { // Rango razonable
-                  this.debugLog(`✅ Stock encontrado en script JSON: ${num}`);
-                  return num;
-                }
-              }
-            }
-          } catch (jsonError) {
-            // Continuar buscando
-          }
-        }
+      // MÉTODO 3: Buscar en todo el documento por atributos de stock
+      const stockFromDocument = this.searchStockInDocument();
+      if (stockFromDocument > 10) {
+        return stockFromDocument;
       }
 
-      this.debugLog('❌ No se pudo leer stock directamente');
+      // MÉTODO 4: Buscar en scripts JSON embebidos
+      const stockFromJSON = this.searchStockInJSON();
+      if (stockFromJSON > 10) {
+        return stockFromJSON;
+      }
+
+      // MÉTODO 5: Buscar en variables JavaScript globales
+      const stockFromJS = this.searchStockInJavaScript();
+      if (stockFromJS > 10) {
+        return stockFromJS;
+      }
+
+      // MÉTODO 6: Buscar en elementos relacionados con eBay
+      const stockFromEbayElements = this.searchStockInEbayElements();
+      if (stockFromEbayElements > 10) {
+        return stockFromEbayElements;
+      }
+
+      this.debugLog('❌ No se pudo leer stock directamente con ningún método');
       return 0;
 
     } catch (error) {
       this.debugLog(`❌ Error en lectura directa: ${error.message}`);
       return 0;
     }
+  }
+
+  searchStockInElement(element, elementName) {
+    if (!element) return 0;
+
+    this.debugLog(`🔍 Buscando stock en ${elementName}...`);
+    
+    const stockAttributes = [
+      'data-stock', 'data-inventory', 'data-quantity', 'data-available', 
+      'data-max-quantity', 'data-max', 'max', 'data-limit',
+      'data-stock-level', 'data-qty', 'data-available-qty',
+      'inventory', 'stock', 'quantity', 'available'
+    ];
+
+    // Buscar en atributos del elemento
+    for (let attr of stockAttributes) {
+      const value = element.getAttribute(attr);
+      if (value && !isNaN(value)) {
+        const numValue = parseInt(value);
+        if (numValue > 10 && numValue < 1000000) { // Rango razonable
+          this.debugLog(`✅ Stock encontrado en ${elementName}, atributo ${attr}: ${numValue}`);
+          return numValue;
+        }
+      }
+    }
+
+    // Buscar en data attributes (dataset)
+    if (element.dataset) {
+      for (let key in element.dataset) {
+        const value = element.dataset[key];
+        if (value && !isNaN(value)) {
+          const numValue = parseInt(value);
+          if (numValue > 10 && numValue < 1000000 && 
+              (key.toLowerCase().includes('stock') || 
+               key.toLowerCase().includes('inventory') ||
+               key.toLowerCase().includes('quantity') ||
+               key.toLowerCase().includes('available'))) {
+            this.debugLog(`✅ Stock encontrado en ${elementName}, dataset.${key}: ${numValue}`);
+            return numValue;
+          }
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  searchStockInDocument() {
+    this.debugLog('🔍 Buscando stock en todo el documento...');
+
+    const stockSelectors = [
+      '[data-stock]', '[data-inventory]', '[data-quantity]', '[data-available]',
+      '[data-max-quantity]', '[data-max]', '[max]', '[data-limit]',
+      '[data-stock-level]', '[data-qty]', '[data-available-qty]'
+    ];
+
+    for (let selector of stockSelectors) {
+      try {
+        const elements = document.querySelectorAll(selector);
+        for (let element of elements) {
+          const attrName = selector.replace(/[\[\]]/g, '');
+          const value = element.getAttribute(attrName);
+          if (value && !isNaN(value)) {
+            const numValue = parseInt(value);
+            if (numValue > 10 && numValue < 1000000) {
+              this.debugLog(`✅ Stock encontrado en documento, selector ${selector}: ${numValue}`);
+              return numValue;
+            }
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    return 0;
+  }
+
+  searchStockInJSON() {
+    this.debugLog('🔍 Buscando stock en scripts JSON...');
+
+    const scripts = document.querySelectorAll('script[type="application/json"], script[type="application/ld+json"], script:not([src])');
+    
+    for (let script of scripts) {
+      try {
+        const content = script.textContent || script.innerHTML;
+        
+        if (content.includes('inventory') || content.includes('stock') || 
+            content.includes('quantity') || content.includes('available')) {
+          
+          this.debugLog(`🔍 Script con contenido relevante encontrado: ${content.substring(0, 100)}...`);
+          
+          // Buscar patrones JSON
+          const patterns = [
+            /"(?:inventory|stock|quantity|available|availableQuantity|stockLevel)":\s*(\d+)/gi,
+            /"(?:data-stock|data-inventory|data-quantity)":\s*"(\d+)"/gi,
+            /inventory[":]\s*(\d+)/gi,
+            /stock[":]\s*(\d+)/gi,
+            /quantity[":]\s*(\d+)/gi,
+            /available[":]\s*(\d+)/gi
+          ];
+          
+          for (let pattern of patterns) {
+            const matches = content.matchAll(pattern);
+            for (let match of matches) {
+              const numValue = parseInt(match[1]);
+              if (numValue > 10 && numValue < 1000000) {
+                this.debugLog(`✅ Stock encontrado en JSON: ${numValue} (patrón: ${pattern})`);
+                return numValue;
+              }
+            }
+          }
+          
+          // Intentar parsear JSON completo
+          try {
+            const jsonData = JSON.parse(content);
+            const stockFromObj = this.searchStockInObject(jsonData);
+            if (stockFromObj > 10) {
+              return stockFromObj;
+            }
+          } catch (jsonError) {
+            // No es JSON válido, continuar
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    return 0;
+  }
+
+  searchStockInObject(obj, path = '') {
+    if (typeof obj !== 'object' || obj === null) return 0;
+
+    for (let key in obj) {
+      const value = obj[key];
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      // Si es un número y la clave sugiere stock
+      if (typeof value === 'number' && value > 10 && value < 1000000) {
+        const keyLower = key.toLowerCase();
+        if (keyLower.includes('stock') || keyLower.includes('inventory') ||
+            keyLower.includes('quantity') || keyLower.includes('available')) {
+          this.debugLog(`✅ Stock encontrado en objeto JSON: ${value} (ruta: ${currentPath})`);
+          return value;
+        }
+      }
+      
+      // Si es string que contiene número
+      if (typeof value === 'string' && !isNaN(value)) {
+        const numValue = parseInt(value);
+        if (numValue > 10 && numValue < 1000000) {
+          const keyLower = key.toLowerCase();
+          if (keyLower.includes('stock') || keyLower.includes('inventory') ||
+              keyLower.includes('quantity') || keyLower.includes('available')) {
+            this.debugLog(`✅ Stock encontrado en objeto JSON (string): ${numValue} (ruta: ${currentPath})`);
+            return numValue;
+          }
+        }
+      }
+      
+      // Recursión en objetos anidados (máximo 3 niveles)
+      if (typeof value === 'object' && path.split('.').length < 3) {
+        const nestedStock = this.searchStockInObject(value, currentPath);
+        if (nestedStock > 10) {
+          return nestedStock;
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  searchStockInJavaScript() {
+    this.debugLog('🔍 Buscando stock en variables JavaScript globales...');
+
+    try {
+      // Variables globales comunes de eBay
+      const globalVars = [
+        'window.ebay', 'window.pageData', 'window.itemData', 
+        'window.inventory', 'window.stock', 'window.quantity',
+        'window.GH', 'window.raptor', 'window.marko'
+      ];
+
+      for (let varPath of globalVars) {
+        try {
+          const obj = eval(varPath);
+          if (obj && typeof obj === 'object') {
+            const stockFromVar = this.searchStockInObject(obj);
+            if (stockFromVar > 10) {
+              this.debugLog(`✅ Stock encontrado en variable ${varPath}: ${stockFromVar}`);
+              return stockFromVar;
+            }
+          }
+        } catch (evalError) {
+          // Variable no existe, continuar
+        }
+      }
+
+      // Buscar en todas las variables globales
+      for (let key in window) {
+        if (typeof window[key] === 'object' && window[key] !== null) {
+          const keyLower = key.toLowerCase();
+          if (keyLower.includes('stock') || keyLower.includes('inventory') ||
+              keyLower.includes('item') || keyLower.includes('product')) {
+            const stockFromGlobal = this.searchStockInObject(window[key]);
+            if (stockFromGlobal > 10) {
+              this.debugLog(`✅ Stock encontrado en variable global ${key}: ${stockFromGlobal}`);
+              return stockFromGlobal;
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      this.debugLog(`❌ Error buscando en JavaScript: ${error.message}`);
+    }
+
+    return 0;
+  }
+
+  searchStockInEbayElements() {
+    this.debugLog('🔍 Buscando stock en elementos específicos de eBay...');
+
+    // Selectores específicos de eBay que podrían contener stock
+    const ebaySelectors = [
+      '.vi-qtyS-wrap', '.vi-qty', '.qtyInput', '.quantity',
+      '[class*="quantity"]', '[class*="stock"]', '[class*="inventory"]',
+      '[id*="quantity"]', '[id*="stock"]', '[id*="inventory"]',
+      '.u-flL.condText', '.notranslate', '.vi-price .u-flL'
+    ];
+
+    for (let selector of ebaySelectors) {
+      try {
+        const elements = document.querySelectorAll(selector);
+        for (let element of elements) {
+          const stockFromElement = this.searchStockInElement(element, `selector ${selector}`);
+          if (stockFromElement > 10) {
+            return stockFromElement;
+          }
+          
+          // También buscar en el texto del elemento si contiene números
+          const text = element.textContent || '';
+          const numbers = text.match(/\d+/g);
+          if (numbers) {
+            for (let num of numbers) {
+              const numValue = parseInt(num);
+              if (numValue > 10 && numValue < 1000000) {
+                this.debugLog(`✅ Posible stock encontrado en texto de ${selector}: ${numValue}`);
+                return numValue;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    return 0;
   }
 
   async exponentialBinarySearch(originalValue) {
