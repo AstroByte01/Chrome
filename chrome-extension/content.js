@@ -971,7 +971,7 @@ class EbayStockChecker {
     // Enfocar y limpiar
     input.focus();
     input.value = '';
-    await this.sleep(FAST_MODE ? 10 : 50);
+    await this.sleep(this.FAST_MODE ? 10 : 50);
     
     // Escribir carácter por carácter con eventos realistas
     const strValue = String(value);
