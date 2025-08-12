@@ -134,7 +134,7 @@ frontend:
         comment: "la veresion actual hace que salte esta pagina al cargar el producto al instante"
       - working: true
         agent: "main"
-        comment: "SOLUCIÓN IMPLEMENTADA v1.4.0 - MODO NO INVASIVO: Convertido extension a activación manual. NO ejecuta automáticamente, requiere clic en popup para iniciar. Panel debug opcional. MutationObserver controlado. Detección de bloqueos mejorada."
+        comment: "MEJORA v1.5.0 - ALGORITMO HÍBRIDO MEJORADO: Integradas mejoras del script del usuario: simulación de escritura realista, detección de errores avanzada, ocultación de elementos problemáticos, algoritmo híbrido adaptativo, panel de resultado personalizado con input funcional."
 
   - task: "Chrome Extension - Debug Panel"
     implemented: true
