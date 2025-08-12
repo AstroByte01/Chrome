@@ -945,7 +945,7 @@ class EbayStockChecker {
       await this.setQuantityWithRealisticInput(quantity);
       
       // Esperar tiempo para que eBay procese
-      await this.sleep(FAST_MODE ? 200 : 1000);
+      await this.sleep(this.FAST_MODE ? 200 : 1000);
       
       // Usar detección de errores mejorada
       const hasError = this.checkForErrorImproved();
