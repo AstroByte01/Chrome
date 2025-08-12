@@ -155,24 +155,31 @@ class EbayStockChecker {
   }
 
   init() {
-    this.debugLog('eBay Stock Checker iniciado');
-    this.createDebugPanel();
+    this.debugLog('eBay Stock Checker iniciado - MODO NO INVASIVO');
     
-    // Esperar a que la página cargue completamente
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.findAndReplaceStock());
-    } else {
-      setTimeout(() => this.findAndReplaceStock(), 1000);
-    }
+    // NO crear panel de debug automáticamente
+    // NO ejecutar verificación automática
+    // SOLO escuchar eventos del usuario
+    
+    this.debugLog('✅ Extension listo - esperando activación manual desde popup');
 
-    // Observer para detectar cambios dinámicos
-    this.setupMutationObserver();
-    
-    // Escuchar evento personalizado para forzar verificación
+    // Escuchar evento para activar verificación (desde popup)
     document.addEventListener('forceStockCheck', () => {
-      this.debugLog('🔄 Forzando verificación de stock...');
-      this.isChecking = false; // Reset del estado
-      this.findAndReplaceStock();
+      this.debugLog('🔄 Verificación solicitada desde popup');
+      this.startManualVerification();
+    });
+
+    // Escuchar evento para mostrar debug panel (opcional)
+    document.addEventListener('showDebugPanel', () => {
+      this.debugLog('🐛 Panel de debug solicitado');
+      this.createDebugPanel();
+    });
+
+    // Escuchar evento para ocultar debug panel
+    document.addEventListener('hideDebugPanel', () => {
+      if (this.debugPanel) {
+        this.debugPanel.style.display = 'none';
+      }
     });
   }
 
