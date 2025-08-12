@@ -1,18 +1,30 @@
-# 🚀 Instalación de eBay Stock Checker
+# 🚀 Instalación de eBay Stock Checker v1.4.0
 
-## ✅ PROBLEMA RESUELTO
-Los iconos han sido creados automáticamente. La extensión está completa y lista para instalar.
+## 🔒 **VERSIÓN NO INVASIVA - PROBLEMA SOLUCIONADO**
 
-## 🚀 ALGORITMO REVOLUCIONARIO - v1.1.0
+### ⚠️ **¿Qué cambió en v1.4.0?**
+- ❌ **Antes**: La extensión se ejecutaba automáticamente al cargar páginas, causando redirecciones
+- ✅ **Ahora**: **MODO NO INVASIVO** - solo funciona cuando el usuario lo solicita
+- ✅ **Activación manual**: Haz clic en "Verificar Stock Ahora" en el popup
+- ✅ **Panel debug opcional**: Se muestra solo durante la verificación
+- ✅ **Sin redirecciones**: No interfiere con la navegación normal
 
-### ⚡ **BÚSQUEDA EXPONENCIAL + BINARIA IMPLEMENTADA**
+### 🎯 **Características Principales**
+- ✅ **Activación manual**: Total control del usuario
+- ✅ **MutationObserver controlado**: Solo activo durante verificación
+- ✅ **Detección de bloqueos**: Se detiene automáticamente si eBay bloquea
+- ✅ **Panel debug temporal**: Aparece solo durante verificación
+- ✅ **Restauración automática**: Vuelve al estado original al parar
 
-**¿Qué cambió?**
-- ❌ **Antes**: 3400 consultas (1 en 1) = 57 minutos
-- ✅ **Ahora**: ~22 consultas = 18 segundos
-- 🎯 **Mejora**: 190x más rápido
+## 🚀 ALGORITMO REVOLUCIONARIO CONSERVADO
 
-### 🧮 **Cómo Funciona Matemáticamente:**
+### ⚡ **BÚSQUEDA EXPONENCIAL + BINARIA**
+**¿Qué se mantiene?**
+- ✅ **Velocidad**: ~22 consultas vs 3400 del método anterior
+- ✅ **Mejora**: 190x más rápido que incremento de 1 en 1
+- ✅ **Seguridad**: Delays controlados para evitar saturar eBay
+
+### 🧮 **Cómo Funciona (sin cambios):**
 
 1. **PASO 1: Lectura Directa** (0 consultas)
    - Busca stock en HTML: `data-stock`, `data-inventory`, etc.
@@ -30,56 +42,14 @@ Los iconos han sido creados automáticamente. La extensión está completa y lis
    - Si 3840 ❌ → rango 2560-3840
    - Continúa hasta encontrar valor exacto
 
-### 📊 **Comparación de Rendimiento:**
-
-| Stock Real | Método Anterior | Método Nuevo | Mejora |
-|------------|----------------|--------------|--------|
-| 100        | 100 consultas  | 14 consultas | 7x     |
-| 1,000      | 1,000 consultas| 18 consultas | 55x    |
-| 3,400      | 3,400 consultas| 22 consultas | 154x   |
-| 10,000     | 10,000 consultas| 26 consultas| 384x   |
-
-### 🛡️ **Características de Seguridad:**
-- ✅ Delays de 800ms entre consultas (no satura eBay)
-- ✅ Detección de cambios de página
-- ✅ Restauración automática del valor original
-- ✅ 3 métodos de detección de errores redundantes
-- ✅ Botón de parada de emergencia
-
-## ✅ LÓGICA CORREGIDA EN v1.0.3
-
-### 🎯 **Algoritmo Simplificado**
-- ✅ **Lógica simple**: Incrementar de 1 en 1 desde 11
-- ✅ **Detección directa**: Cuando aparece error, el anterior es el stock real
-- ✅ **Sin complejidad**: No más búsqueda binaria confusa
-- ✅ **Enfoque directo**: Si 3401 da error, entonces 3400 es el stock
-
-### 🔧 **Correcciones Específicas**
-- ❌ **Antes**: Búsqueda binaria compleja que no funcionaba bien
-- ✅ **Ahora**: Incremento simple 11, 12, 13, 14... hasta error
-- ✅ **Resultado**: Cuando encuentra "Please enter a lower number", para y toma el anterior
-
-## ✅ ERRORES CORREGIDOS EN v1.0.1
-
-### 🔧 Selector inválido corregido
-- ❌ **Error anterior**: `button:contains("Buy It Now")` causaba SyntaxError
-- ✅ **Solución**: Búsqueda manual por texto en botones y enlaces
-- ✅ **Resultado**: Sin errores de consola, detección más robusta
-
-### 🛠️ Mejoras adicionales
-- ✅ Panel de debug mejorado con controles (minimizar, cerrar, limpiar)
-- ✅ Manejo de errores más robusto en todos los selectores
-- ✅ Mejor logging y diagnóstico en tiempo real
-- ✅ Búsqueda de elementos más exhaustiva
-
 ## 📂 Archivos incluidos
 ```
 chrome-extension/
-├── manifest.json          ✅ Configuración principal
-├── content.js            ✅ Script principal
-├── popup.html            ✅ Interfaz popup
-├── popup.js              ✅ Lógica popup
-├── popup.css             ✅ Estilos popup
+├── manifest.json          ✅ Configuración v1.4.0
+├── content.js            ✅ Script NO INVASIVO
+├── popup.html            ✅ Interfaz actualizada
+├── popup.js              ✅ Lógica manual
+├── popup.css             ✅ Estilos
 ├── styles.css            ✅ Estilos página
 ├── icon16.png            ✅ Icono 16x16
 ├── icon32.png            ✅ Icono 32x32
@@ -92,7 +62,7 @@ chrome-extension/
 
 ### 1. Preparar archivos
 - Copia toda la carpeta `chrome-extension` a tu escritorio
-- O descarga: `/app/ebay-stock-checker-extension.tar.gz`
+- O descarga el archivo completo
 
 ### 2. Instalar en Chrome
 1. Abre Chrome y ve a: `chrome://extensions/`
@@ -106,11 +76,21 @@ chrome-extension/
 - ✅ El icono debe aparecer en la barra
 - ✅ Debe decir "eBay Stock Checker" al hacer hover
 
-## 🎯 Uso
-1. Ve a cualquier producto de eBay
-2. Busca "More than 10 available"  
-3. La extensión automáticamente lo reemplazará con la cantidad real
-4. Haz clic en el icono para forzar verificación manual
+## 🎯 Uso - NUEVA FORMA
+
+### **MODO NO INVASIVO:**
+1. Ve a cualquier producto de eBay que muestre "More than 10 available"
+2. **Haz clic en el icono de la extensión** en la barra de Chrome
+3. **Haz clic en "Verificar Stock Ahora"**
+4. Se abrirá un panel de debug que mostrará el progreso en tiempo real
+5. El texto "More than 10 available" se reemplazará con la cantidad real
+6. El panel se puede minimizar, cerrar o limpiar según necesites
+
+### **Controles disponibles:**
+- 🔄 **Iniciar Verificación**: Desde el panel debug o popup
+- 🛑 **PARAR Verificación**: Detiene el proceso inmediatamente  
+- 🗑️ **Limpiar Log**: Limpia el historial del panel debug
+- ❌ **Cerrar Panel**: Oculta el panel debug
 
 ## 🔍 Verificar funcionamiento
 Prueba con estos productos de ejemplo:
@@ -118,33 +98,47 @@ Prueba con estos productos de ejemplo:
 - https://www.ebay.com/itm/177077940738
 - https://www.ebay.com/itm/145507784307
 
+**Pasos para probar:**
+1. Ve a uno de estos enlaces
+2. Haz clic en el icono de la extensión
+3. Haz clic en "Verificar Stock Ahora"
+4. Observa el panel debug para ver el proceso
+
 ## ❌ Solución de problemas
 
-### Error: "Could not load icon"
-- ✅ **RESUELTO**: Los iconos ya están incluidos
+### No aparece el panel debug
+- ✅ **Solución**: Haz clic en el icono de la extensión primero
+- ✅ El panel solo aparece cuando inicias una verificación
+
+### La extensión no hace nada
+- ✅ **Correcto**: Ahora requiere activación manual
+- ✅ Haz clic en el icono → "Verificar Stock Ahora"
+
+### Página se redirige o aparecen pop-ups
+- ✅ **RESUELTO**: La v1.4.0 no ejecuta nada automáticamente
+- ✅ Si ocurre, usa el botón "PARAR Verificación"
 
 ### Error: "Could not load manifest"
 - Verifica que `manifest.json` esté en la carpeta raíz
 - Revisa que no haya errores de sintaxis JSON
 
-### La extensión no aparece
-- Refresca `chrome://extensions/`
-- Verifica que "Modo desarrollador" esté activado
-
 ### No funciona en eBay
 - Verifica que estés en una página `/itm/`
 - Abre DevTools (F12) > Console para ver logs
-- Usa el popup para forzar verificación
+- Asegúrate de activar manualmente desde el popup
 
 ## 🚨 IMPORTANTE
-- La extensión solo funciona en páginas de productos eBay
-- Requiere conexión a internet para funcionar
-- Los logs aparecen en la consola del navegador (F12)
+- ✅ **NUEVA REGLA**: La extensión NO funciona automáticamente
+- ✅ **Control total**: Solo tú decides cuándo verificar stock
+- ✅ La extensión solo funciona en páginas de productos eBay
+- ✅ Requiere conexión a internet para funcionar
+- ✅ Los logs aparecen en el panel debug y en la consola (F12)
 
 ## ✅ CONFIRMACIÓN
-Si ves el icono de la extensión sin errores rojos, la instalación fue exitosa.
+Si ves el icono de la extensión sin errores rojos y el popup responde al hacer clic, la instalación fue exitosa.
 
 ---
-**Versión:** 1.1.0 - ALGORITMO EXPONENCIAL + BINARIA
+**Versión:** 1.4.0 - MODO NO INVASIVO
 **Compatible con:** Chrome (Manifest V3)  
 **Sitios:** eBay.com, eBay.es, eBay.co.uk
+**Cambio principal:** Activación manual para evitar redirecciones
