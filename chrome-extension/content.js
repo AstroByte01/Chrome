@@ -255,12 +255,32 @@ class EbayStockChecker {
     this.isChecking = false;
     this.stopMutationObserver();
     
+    // Limpiar CSS de ocultación si existe
+    if (this.hideElementsStyle && this.hideElementsStyle.parentNode) {
+      this.hideElementsStyle.parentNode.removeChild(this.hideElementsStyle);
+      this.hideElementsStyle = null;
+    }
+    document.body.classList.remove('ebay-stock-checker-active');
+    
+    // Restaurar texto original si existe
     if (this.targetElement && this.originalText) {
       try {
         this.targetElement.textContent = this.originalText;
         this.debugLog(`🔄 Texto restaurado: "${this.originalText}"`);
       } catch (error) {
         this.debugLog(`❌ Error restaurando texto: ${error.message}`);
+      }
+    }
+    
+    // Restaurar input original si existe
+    if (this.quantityInput && document.contains(this.quantityInput)) {
+      try {
+        this.quantityInput.value = '1';
+        this.quantityInput.style.opacity = '';
+        this.quantityInput.style.pointerEvents = '';
+        this.debugLog('🔄 Campo de cantidad restaurado');
+      } catch (error) {
+        this.debugLog(`❌ Error restaurando input: ${error.message}`);
       }
     }
     
