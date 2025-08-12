@@ -595,10 +595,31 @@ class EbayStockChecker {
         return false;
       }
 
-      this.debugLog(`🧪 === PROBANDO CANTIDAD: ${quantity} ===`);
+      this.debugLog(`🧪 PRUEBA ULTRA SIMPLE: ${quantity}`);
 
-      // MÉTODO EXHAUSTIVO DE DETECCIÓN
-      return await this.testQuantityExhaustive(quantity);
+      // Establecer valor de forma muy simple
+      this.quantityInput.value = quantity;
+      this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      // Esperar tiempo generoso para que eBay procese
+      await this.sleep(4000); // 4 segundos completos
+      
+      // Verificar error de forma ULTRA SIMPLE
+      const errorElement = document.querySelector('#qtyErrMsg > span');
+      if (errorElement && errorElement.textContent.includes('Please enter a lower number')) {
+        this.debugLog(`🚨 ERROR ENCONTRADO: "${errorElement.textContent}"`);
+        return false;
+      }
+
+      // Verificar en toda la página como backup
+      const pageText = document.body.textContent || '';
+      if (pageText.includes('Please enter a lower number')) {
+        this.debugLog('🚨 ERROR ENCONTRADO en página');
+        return false;
+      }
+
+      this.debugLog(`✅ ${quantity} es válido`);
+      return true;
 
     } catch (error) {
       this.debugLog(`❌ Error probando ${quantity}: ${error.message}`);
