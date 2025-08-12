@@ -995,7 +995,7 @@ class EbayStockChecker {
         bubbles: true, cancelable: true, key: char, keyCode 
       }));
       
-      await this.sleep(FAST_MODE ? 5 : 20);
+      await this.sleep(this.FAST_MODE ? 5 : 20);
     }
     
     // Eventos de finalización
