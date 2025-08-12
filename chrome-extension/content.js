@@ -510,49 +510,63 @@ class EbayStockChecker {
   }
 
   async exponentialBinarySearch(originalValue) {
-    this.debugLog('🎯 PASO 2: Iniciando búsqueda exponencial + binaria...');
+    this.debugLog('🐌 BÚSQUEDA ULTRA LENTA: Iniciando búsqueda exponencial + binaria...');
 
-    // FASE 1: Búsqueda exponencial para encontrar límite superior
-    this.debugLog('📈 FASE EXPONENCIAL: Buscando límite superior...');
+    // FASE 1: Búsqueda exponencial MUY LENTA
+    this.debugLog('📈 FASE EXPONENCIAL ULTRA LENTA: Buscando límite superior...');
     
-    let exponentialValues = [];
-    let lastValidValue = 10; // Sabemos que 10 funciona
+    let exponentialValues = [20, 50, 100, 200, 500, 1000, 2000, 3000, 4000, 5000];
+    let lastValidValue = 10;
     let firstInvalidValue = null;
 
-    // Generar secuencia exponencial: 11, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120...
-    for (let i = 1; i <= 15; i++) { // Máximo 15 iteraciones (hasta ~327,680)
-      const testValue = Math.floor(10 + Math.pow(2, i) * 5); // Empezar en 20, luego 40, 80...
-      exponentialValues.push(testValue);
+    for (let i = 0; i < exponentialValues.length; i++) {
+      const testValue = exponentialValues[i];
       
-      if (!await this.testQuantity(testValue)) {
-        lastValidValue = exponentialValues[i - 2] || 10; // El anterior válido
+      this.updateDisplayText(`🐌 Probando exponencial... ${testValue} (${i + 1}/${exponentialValues.length})`);
+      this.debugLog(`🔍 EXPONENCIAL: Probando ${testValue}...`);
+      
+      // Verificar si la página sigue respondiendo
+      await this.sleep(1000); // Pausa de 1 segundo antes de cada prueba
+      
+      const isValid = await this.testQuantity(testValue);
+      
+      if (!isValid) {
+        lastValidValue = exponentialValues[i - 1] || 10;
         firstInvalidValue = testValue;
-        this.debugLog(`🎯 Límite encontrado: válido=${lastValidValue}, inválido=${firstInvalidValue}`);
+        this.debugLog(`🎯 LÍMITE ENCONTRADO: válido=${lastValidValue}, inválido=${firstInvalidValue}`);
         break;
       }
+      
+      // Pausa larga entre cada prueba exponencial
+      await this.sleep(2000);
     }
 
     if (!firstInvalidValue) {
-      this.debugLog('⚠️ No se encontró límite en fase exponencial');
+      this.debugLog('⚠️ No se encontró límite en fase exponencial ultra lenta');
       return 0;
     }
 
-    // FASE 2: Búsqueda binaria entre lastValidValue y firstInvalidValue
-    this.debugLog(`🔍 FASE BINARIA: Buscando entre ${lastValidValue} y ${firstInvalidValue}`);
+    // FASE 2: Búsqueda binaria MUY LENTA
+    this.debugLog(`🔍 FASE BINARIA ULTRA LENTA: Buscando entre ${lastValidValue} y ${firstInvalidValue}`);
     
     let low = lastValidValue;
     let high = firstInvalidValue;
-    let maxIterations = Math.ceil(Math.log2(high - low)) + 1;
+    let iterations = 0;
+    const maxIterations = 10; // Reducir iteraciones para evitar sobrecargar
     
-    this.debugLog(`📊 Búsqueda binaria: rango inicial [${low}, ${high}], máx iteraciones: ${maxIterations}`);
-
-    for (let iteration = 0; iteration < maxIterations; iteration++) {
-      if (low >= high - 1) break;
-
+    while (low < high - 1 && iterations < maxIterations) {
+      iterations++;
+      
       const mid = Math.floor((low + high) / 2);
-      this.debugLog(`🔍 Binaria iteración ${iteration + 1}: probando ${mid} (rango: ${low}-${high})`);
+      this.updateDisplayText(`🐌 Búsqueda binaria... ${mid} [${low}-${high}] (${iterations}/${maxIterations})`);
+      this.debugLog(`🔍 BINARIA iteración ${iterations}: probando ${mid}`);
 
-      if (await this.testQuantity(mid)) {
+      // Pausa larga antes de cada prueba binaria
+      await this.sleep(2000);
+      
+      const isValid = await this.testQuantity(mid);
+      
+      if (isValid) {
         low = mid;
         this.debugLog(`✅ ${mid} válido, nuevo low: ${low}`);
       } else {
@@ -560,11 +574,16 @@ class EbayStockChecker {
         this.debugLog(`❌ ${mid} inválido, nuevo high: ${high}`);
       }
 
-      this.updateDisplayText(`🔍 Búsqueda binaria... ${mid} [${low}-${high}] (${iteration + 1}/${maxIterations})`);
+      // Pausa extra larga entre iteraciones binarias
+      await this.sleep(3000);
     }
 
     const finalResult = low;
-    this.debugLog(`🎉 RESULTADO FINAL: Stock real = ${finalResult}`);
+    this.debugLog(`🎉 RESULTADO FINAL ULTRA LENTO: Stock real = ${finalResult}`);
+    
+    // MOSTRAR RESULTADO FINAL
+    this.updateDisplayText(`🎉 STOCK REAL: ${finalResult} unidades ✅`);
+    
     return finalResult;
   }
 
