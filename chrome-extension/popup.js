@@ -75,3 +75,11 @@ function forceStockCheck() {
   });
   document.dispatchEvent(event);
 }
+
+// Función para mostrar panel de debug
+function showDebugPanel() {
+  const event = new CustomEvent('showDebugPanel', {
+    detail: { show: true }
+  });
+  document.dispatchEvent(event);
+}
