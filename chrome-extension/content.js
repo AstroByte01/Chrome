@@ -882,87 +882,6 @@ class EbayStockChecker {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  checkForError() {
-    this.debugLog('🔍 Verificando errores con selector específico...');
-
-    // MÉTODO PRINCIPAL: Buscar en el elemento específico donde aparece el error
-    const specificSelectors = [
-      '#qtyErrMsg > span',                    // Selector específico que me diste
-      '#qtyErrMsg span',                      // Variante sin >
-      '#qtyErrMsg',                           // El contenedor completo
-      '[id="qtyErrMsg"] > span',              // Variante con atributo
-      '[id="qtyErrMsg"] span'                 // Variante sin >
-    ];
-
-    for (let selector of specificSelectors) {
-      try {
-        const elements = document.querySelectorAll(selector);
-        this.debugLog(`🔍 Probando selector "${selector}": ${elements.length} elementos encontrados`);
-        
-        for (let element of elements) {
-          const text = element.textContent || element.innerText || '';
-          this.debugLog(`📝 Texto en elemento: "${text}"`);
-          
-          if (text.includes('Please enter a lower number') || 
-              text.includes('please enter a lower number')) {
-            this.debugLog(`🚨 ERROR DETECTADO en selector "${selector}": "${text}"`);
-            return true;
-          }
-        }
-      } catch (selectorError) {
-        this.debugLog(`❌ Error con selector "${selector}": ${selectorError.message}`);
-      }
-    }
-
-    // MÉTODO SECUNDARIO: Buscar elementos con clase ux-textspans
-    try {
-      const textspansElements = document.querySelectorAll('.ux-textspans, span.ux-textspans');
-      this.debugLog(`🔍 Elementos con clase ux-textspans: ${textspansElements.length}`);
-      
-      for (let element of textspansElements) {
-        const text = element.textContent || element.innerText || '';
-        this.debugLog(`📝 Texto en ux-textspans: "${text}"`);
-        
-        if (text.includes('Please enter a lower number') || 
-            text.includes('please enter a lower number')) {
-          this.debugLog(`🚨 ERROR DETECTADO en ux-textspans: "${text}"`);
-          return true;
-        }
-      }
-    } catch (textspansError) {
-      this.debugLog(`❌ Error buscando ux-textspans: ${textspansError.message}`);
-    }
-
-    // MÉTODO TERCIARIO: Búsqueda directa en toda la página
-    const pageText = (document.body.innerText || document.body.textContent || '').toLowerCase();
-    if (pageText.includes('please enter a lower number')) {
-      this.debugLog('🚨 ERROR DETECTADO en texto completo de página');
-      return true;
-    }
-
-    // MÉTODO CUATERNARIO: Buscar cualquier elemento que contenga el texto específico
-    try {
-      const allElements = document.querySelectorAll('*');
-      for (let element of allElements) {
-        const text = (element.textContent || '').trim();
-        
-        // Solo verificar textos cortos que puedan ser mensajes de error
-        if (text.length > 5 && text.length < 100 && 
-            (text.includes('Please enter a lower number') || 
-             text.includes('please enter a lower number'))) {
-          
-          this.debugLog(`🚨 ERROR DETECTADO en elemento genérico: "${text}" (tag: ${element.tagName}, class: ${element.className}, id: ${element.id})`);
-          return true;
-        }
-      }
-    } catch (genericError) {
-      this.debugLog(`❌ Error en búsqueda genérica: ${genericError.message}`);
-    }
-
-    this.debugLog('✅ No se detectaron errores');
-    return false;
-  }
-
   updateDisplayText(text) {
     if (this.targetElement) {
       try {
@@ -980,10 +899,6 @@ class EbayStockChecker {
     } else {
       this.debugLog(`⚠️ No hay elemento objetivo para actualizar texto: "${text}"`);
     }
-  }
-
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
