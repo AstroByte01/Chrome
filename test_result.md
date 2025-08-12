@@ -101,3 +101,66 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Chrome extension para eBay que calcula automáticamente el stock real cuando un producto muestra 'More than 10 available'. El usuario reporta que la versión actual (v1.3.0) está causando que aparezca una página inmediatamente al cargar un producto, lo que sugiere redirecciones no deseadas o comportamiento invasivo del extension."
+
+backend:
+  - task: "N/A - Proyecto de Chrome Extension"
+    implemented: false
+    working: "NA"
+    file: "N/A"
+    stuck_count: 0
+    priority: "NA"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Este proyecto no tiene backend, es un Chrome extension que funciona completamente del lado del cliente"
+
+frontend:
+  - task: "Chrome Extension - Stock Detection"
+    implemented: true
+    working: false
+    file: "/app/chrome-extension/content.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "PROBLEMA CRÍTICO: Usuario reporta que la versión actual causa que salte una página al cargar el producto al instante. Esto sugiere que el extension es demasiado invasivo al inicio y está causando redirecciones o páginas de advertencia de eBay."
+      - working: false
+        agent: "user"
+        comment: "la veresion actual hace que salte esta pagina al cargar el producto al instante"
+
+  - task: "Chrome Extension - Debug Panel"
+    implemented: true
+    working: false
+    file: "/app/chrome-extension/content.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Panel de debug se crea automáticamente al cargar página, puede estar contribuyendo al problema de invasividad"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Investigar y resolver problema de redirección automática"
+    - "Hacer extension menos invasivo al cargar página"
+    - "Implementar activación manual opcional"
+  stuck_tasks:
+    - "Chrome Extension - Stock Detection"
+  test_all: false
+  test_priority: "stuck_first"
+
+agent_communication:
+  - agent: "main"
+    message: "PROBLEMA CRÍTICO IDENTIFICADO: La versión 1.3.0 del extension está causando redirecciones o pop-ups inmediatos al cargar páginas de producto eBay. Necesito identificar la causa raíz y crear una solución menos invasiva. Posibles causas: 1) Ejecución automática agresiva, 2) MutationObserver muy agresivo, 3) Panel debug automático, 4) Múltiples verificaciones simultáneas."
