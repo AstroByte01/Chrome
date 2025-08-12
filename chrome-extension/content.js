@@ -144,11 +144,13 @@ class EbayStockChecker {
   }
 
   debugLog(message) {
-    console.log(message);
+    console.log(`[eBay Stock] ${message}`);
     if (this.debugPanel) {
       const content = this.debugPanel.querySelector('#debug-content');
-      content.innerHTML += `<div style="margin: 2px 0; color: #333;">${new Date().toLocaleTimeString()}: ${message}</div>`;
-      content.scrollTop = content.scrollHeight;
+      if (content) {
+        content.innerHTML += `<div style="margin: 2px 0; color: #333;">${new Date().toLocaleTimeString()}: ${message}</div>`;
+        content.scrollTop = content.scrollHeight;
+      }
     }
   }
 
