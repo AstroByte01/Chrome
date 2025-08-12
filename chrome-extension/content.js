@@ -266,7 +266,10 @@ class EbayStockChecker {
   }
 
   findAndReplaceStock() {
-    if (this.isChecking) return;
+    if (this.isChecking || !this.isActive) {
+      this.debugLog('⚠️ Verificación ya en curso o extension inactivo');
+      return;
+    }
 
     this.debugLog('🔍 Buscando elementos con "More than 10 available"...');
 
