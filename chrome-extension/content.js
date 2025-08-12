@@ -184,19 +184,85 @@ class EbayStockChecker {
   }
 
   setupMutationObserver() {
-    const observer = new MutationObserver((mutations) => {
+    // Solo configurar observer si no existe y estamos en verificación activa
+    if (this.observer || !this.isActive) return;
+    
+    this.debugLog('🔍 Configurando MutationObserver controlado...');
+    
+    this.observer = new MutationObserver((mutations) => {
+      if (!this.isActive || this.isChecking) return;
+      
+      let shouldCheck = false;
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList' || mutation.type === 'characterData') {
-          this.findAndReplaceStock();
+          // Solo verificar cambios relevantes para evitar spam
+          const target = mutation.target;
+          if (target && target.textContent && 
+              (target.textContent.includes('More than 10 available') ||
+               target.textContent.includes('Más de 10 disponibles'))) {
+            shouldCheck = true;
+          }
         }
       });
+      
+      if (shouldCheck) {
+        this.debugLog('🔄 Cambio relevante detectado por MutationObserver');
+        this.findAndReplaceStock();
+      }
     });
 
-    observer.observe(document.body, {
+    this.observer.observe(document.body, {
       childList: true,
       subtree: true,
       characterData: true
     });
+  }
+
+  stopMutationObserver() {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+      this.debugLog('🛑 MutationObserver detenido');
+    }
+  }
+
+  startManualVerification() {
+    if (this.isChecking) {
+      this.debugLog('⚠️ Ya hay una verificación en curso');
+      return;
+    }
+
+    this.debugLog('🚀 Iniciando verificación manual...');
+    this.isActive = true;
+    
+    // Crear panel de debug si no existe
+    if (!this.debugPanel) {
+      this.createDebugPanel();
+    }
+    
+    // Configurar observer para esta sesión
+    this.setupMutationObserver();
+    
+    // Buscar y ejecutar verificación
+    this.findAndReplaceStock();
+  }
+
+  stopVerification() {
+    this.debugLog('🛑 Deteniendo verificación...');
+    this.isActive = false;
+    this.isChecking = false;
+    this.stopMutationObserver();
+    
+    if (this.targetElement && this.originalText) {
+      try {
+        this.targetElement.textContent = this.originalText;
+        this.debugLog(`🔄 Texto restaurado: "${this.originalText}"`);
+      } catch (error) {
+        this.debugLog(`❌ Error restaurando texto: ${error.message}`);
+      }
+    }
+    
+    this.updateDisplayText('🛑 Verificación detenida por usuario');
   }
 
   findAndReplaceStock() {
