@@ -854,81 +854,179 @@ class EbayStockChecker {
   }
 
   async exponentialBinarySearch(originalValue) {
-    this.debugLog('🐌 BÚSQUEDA ULTRA LENTA: Iniciando búsqueda exponencial + binaria...');
-
-    // FASE 1: Búsqueda exponencial MUY LENTA
-    this.debugLog('📈 FASE EXPONENCIAL ULTRA LENTA: Buscando límite superior...');
+    this.debugLog('🚀 ALGORITMO HÍBRIDO MEJORADO: Basado en script del usuario...');
     
-    let exponentialValues = [20, 50, 100, 200, 500, 1000, 2000, 3000, 4000, 5000];
-    let lastValidValue = 10;
-    let firstInvalidValue = null;
+    // Crear CSS para ocultar elementos problemáticos
+    this.hideElementsStyle = this.createHideProblematicElementsCSS();
+    document.head.appendChild(this.hideElementsStyle);
+    document.body.classList.add('ebay-stock-checker-active');
 
-    for (let i = 0; i < exponentialValues.length; i++) {
-      const testValue = exponentialValues[i];
-      
-      this.updateDisplayText(`🐌 Probando exponencial... ${testValue} (${i + 1}/${exponentialValues.length})`);
-      this.debugLog(`🔍 EXPONENCIAL: Probando ${testValue}...`);
-      
-      // Verificar si la página sigue respondiendo
-      await this.sleep(1000); // Pausa de 1 segundo antes de cada prueba
-      
-      const isValid = await this.testQuantity(testValue);
-      
-      if (!isValid) {
-        lastValidValue = exponentialValues[i - 1] || 10;
-        firstInvalidValue = testValue;
-        this.debugLog(`🎯 LÍMITE ENCONTRADO: válido=${lastValidValue}, inválido=${firstInvalidValue}`);
-        break;
+    const maxWaitTimeMs = 15000; // 15 segundos timeout total
+    const startTime = Date.now();
+    
+    let step = 1;
+    let current = 1;
+    let lastValid = 0;
+    
+    this.debugLog('🔍 Búsqueda híbrida acelerada iniciando...');
+    this.updateDisplayText('🔍 Algoritmo híbrido en progreso...');
+    
+    try {
+      // Algoritmo híbrido adaptativo (basado en script del usuario)
+      while (Date.now() - startTime < maxWaitTimeMs) {
+        this.updateDisplayText(`🔍 Probando cantidad: ${current}`);
+        
+        const valido = await this.testQuantityHybrid(current);
+        
+        if (valido) {
+          lastValid = current;
+          current += step;
+          step *= 2; // Crecimiento exponencial
+          this.debugLog(`✅ ${lastValid} válido, saltando a ${current} (step: ${step})`);
+        } else {
+          if (step === 1) {
+            // Hemos encontrado el límite exacto
+            this.debugLog(`🎯 Límite exacto encontrado: ${lastValid}`);
+            break;
+          }
+          // Retroceder y usar pasos más pequeños
+          current = lastValid + Math.floor(step / 2);
+          step = Math.floor(step / 2);
+          this.debugLog(`❌ ${current + step} inválido, retrocediendo a ${current} (step: ${step})`);
+        }
+        
+        // Pausa más corta en modo rápido
+        await this.sleep(this.FAST_MODE ? 100 : 500);
       }
-      
-      // Pausa larga entre cada prueba exponencial
-      await this.sleep(2000);
-    }
 
-    if (!firstInvalidValue) {
-      this.debugLog('⚠️ No se encontró límite en fase exponencial ultra lenta');
+      if (Date.now() - startTime >= maxWaitTimeMs) {
+        this.debugLog('⏰ Timeout alcanzado en búsqueda híbrida');
+      }
+
+      const finalResult = lastValid;
+      this.debugLog(`🎉 RESULTADO HÍBRIDO FINAL: Stock real = ${finalResult}`);
+      
+      // Crear panel personalizado con resultado (basado en script del usuario)
+      this.createCustomResultPanel(finalResult);
+      
+      return finalResult;
+
+    } catch (error) {
+      this.debugLog(`❌ Error en búsqueda híbrida: ${error.message}`);
       return 0;
+    } finally {
+      // Limpiar CSS de ocultación
+      if (this.hideElementsStyle && this.hideElementsStyle.parentNode) {
+        this.hideElementsStyle.parentNode.removeChild(this.hideElementsStyle);
+      }
+      document.body.classList.remove('ebay-stock-checker-active');
     }
+  }
 
-    // FASE 2: Búsqueda binaria MUY LENTA
-    this.debugLog(`🔍 FASE BINARIA ULTRA LENTA: Buscando entre ${lastValidValue} y ${firstInvalidValue}`);
-    
-    let low = lastValidValue;
-    let high = firstInvalidValue;
-    let iterations = 0;
-    const maxIterations = 10; // Reducir iteraciones para evitar sobrecargar
-    
-    while (low < high - 1 && iterations < maxIterations) {
-      iterations++;
-      
-      const mid = Math.floor((low + high) / 2);
-      this.updateDisplayText(`🐌 Búsqueda binaria... ${mid} [${low}-${high}] (${iterations}/${maxIterations})`);
-      this.debugLog(`🔍 BINARIA iteración ${iterations}: probando ${mid}`);
-
-      // Pausa larga antes de cada prueba binaria
-      await this.sleep(2000);
-      
-      const isValid = await this.testQuantity(mid);
-      
-      if (isValid) {
-        low = mid;
-        this.debugLog(`✅ ${mid} válido, nuevo low: ${low}`);
-      } else {
-        high = mid;
-        this.debugLog(`❌ ${mid} inválido, nuevo high: ${high}`);
+  async testQuantityHybrid(quantity) {
+    try {
+      if (!this.quantityInput || !document.contains(this.quantityInput)) {
+        return false;
       }
 
-      // Pausa extra larga entre iteraciones binarias
-      await this.sleep(3000);
-    }
+      // Usar simulación realista de entrada
+      await this.setQuantityWithRealisticInput(quantity);
+      
+      // Esperar cambios en DOM
+      await this.waitForDOMChange(this.FAST_MODE ? 200 : 500);
+      
+      // Verificar errores con método mejorado
+      const hasError = this.checkForErrorImproved();
+      
+      return !hasError;
 
-    const finalResult = low;
-    this.debugLog(`🎉 RESULTADO FINAL ULTRA LENTO: Stock real = ${finalResult}`);
+    } catch (error) {
+      this.debugLog(`❌ Error en testQuantityHybrid(${quantity}): ${error.message}`);
+      return false;
+    }
+  }
+
+  createCustomResultPanel(stockAmount) {
+    // Panel personalizado elegante basado en script del usuario
+    const panel = document.createElement('div');
+    panel.className = 'ebay-stock-checker-panel';
+    panel.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #1e1e1e;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      z-index: 99999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      width: 220px;
+      border: 2px solid #4CAF50;
+    `;
     
-    // MOSTRAR RESULTADO FINAL
-    this.updateDisplayText(`🎉 STOCK REAL: ${finalResult} unidades ✅`);
+    panel.innerHTML = `
+      <div style="margin-bottom: 8px;">
+        <strong>🎯 Stock detectado:</strong> ${stockAmount}
+      </div>
+      <div>
+        <label for="customQty" style="display: block; margin-bottom: 4px; font-size: 12px; color: #ccc;">
+          Cantidad deseada:
+        </label>
+        <input 
+          id="customQty" 
+          type="number" 
+          min="1" 
+          max="${stockAmount}" 
+          value="1" 
+          style="
+            width: 100%; 
+            padding: 8px; 
+            border-radius: 4px; 
+            border: none; 
+            font-size: 14px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+          "
+        >
+      </div>
+      <div style="margin-top: 8px; font-size: 11px; color: #aaa; text-align: center;">
+        ✅ Verificación completada
+      </div>
+    `;
     
-    return finalResult;
+    document.body.appendChild(panel);
+    
+    // Conectar input personalizado con el original
+    const customQty = document.getElementById('customQty');
+    customQty.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value, 10);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > stockAmount) val = stockAmount;
+      
+      e.target.value = val;
+      
+      if (this.quantityInput && document.contains(this.quantityInput)) {
+        this.quantityInput.value = val;
+        this.quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+        this.quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    
+    // Auto-remover el panel después de 30 segundos
+    setTimeout(() => {
+      if (panel && panel.parentNode) {
+        panel.style.transition = 'opacity 0.5s ease';
+        panel.style.opacity = '0';
+        setTimeout(() => {
+          if (panel.parentNode) panel.parentNode.removeChild(panel);
+        }, 500);
+      }
+    }, 30000);
+    
+    this.debugLog('✅ Panel de resultado personalizado creado');
   }
 
   async testQuantity(quantity) {
