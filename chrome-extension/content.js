@@ -993,11 +993,16 @@ class EbayStockChecker {
   }
 }
 
-// Inicializar cuando la página esté lista
+// Inicializar cuando la página esté lista - MODO NO INVASIVO
+let ebayChecker = null;
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    new EbayStockChecker();
+    ebayChecker = new EbayStockChecker();
   });
 } else {
-  new EbayStockChecker();
+  ebayChecker = new EbayStockChecker();
 }
+
+// Exponer función para debugging manual si es necesario
+window.ebayStockChecker = ebayChecker;
